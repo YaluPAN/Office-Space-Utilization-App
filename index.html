@@ -1,0 +1,1391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brightline Desk Usage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&display=swap">
+<style>
+/* ── Envoy design tokens ── */
+:root{
+  --white:#ffffff;--carbon-5:#f6f6f9;--carbon-10:#ebebf0;--carbon-20:#c9cbd4;--carbon-30:#a4a9b6;
+  --carbon-40:#8a8f9e;--carbon-50:#717684;--carbon-70:#3f4450;--carbon-80:#303541;--carbon-90:#1f232d;
+  --gem-5:#f0f4ff;--gem-10:#e0e8ff;--gem-60:#4e4eda;--gem-70:#4141a2;
+  --red-10:#ffe0de;--red-50:#e91c1c;--red-60:#c70a14;
+  --cilantro-10:#c7f5d2;--cilantro-40:#21944e;--cilantro-60:#017939;
+  --papaya-10:#ffe7bd;--papaya-60:#a84f00;
+
+  --background:var(--white);--foreground:var(--carbon-70);--card:var(--white);--subtle:var(--carbon-5);
+  --muted:var(--carbon-50);--primary:var(--gem-60);--brand:var(--red-50);--ring:var(--carbon-40);
+
+  /* chart series: validated pair (used / no-show), track = unbooked */
+  --s-used:#4e4eda;--s-noshow:#d6453a;--s-track:var(--carbon-10);
+  /* booked demand (neutral) — distinct from used (blue) so the two never read as the same thing */
+  --s-booked:var(--carbon-30);
+
+  --radius-sm:2px;--radius-md:4px;--radius-lg:6px;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0 / .05);
+  --shadow-md:0 1px 3px 0 rgb(0 0 0 / .1),0 1px 2px -1px rgb(0 0 0 / .1);
+  --shadow-lg:0 10px 30px -6px rgb(0 0 0 / .25);
+  --sans:'Sofia Pro',Arial,sans-serif;
+  --mono:'Geist Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--subtle);color:var(--foreground);font-family:var(--sans);font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;color:var(--carbon-90);letter-spacing:-.01em}
+h1{font-size:22px;line-height:1.2}
+h2{font-size:16.5px;line-height:1.3}
+p{margin:0}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.mono{font-family:var(--mono)}
+.overline{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+
+.page{max-width:1400px;margin:0 auto;padding:0 28px 40px}
+
+/* header */
+header.top{background:var(--white);border-bottom:1px solid var(--carbon-10)}
+header.top .page{display:flex;align-items:center;gap:20px;padding-top:7px;padding-bottom:7px}
+.brandrule{width:4px;align-self:stretch;background:var(--brand);border-radius:var(--radius-sm)}
+.titleblock{flex:1;min-width:0}
+.titleblock p{color:var(--muted);font-size:13.5px;margin-top:2px}
+.btn{border:1px solid var(--carbon-20);background:var(--white);color:var(--carbon-80);border-radius:var(--radius-md);padding:7px 12px;font-size:13.5px;font-weight:600;white-space:nowrap}
+.btn:hover{background:var(--carbon-5)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--white)}
+.btn.primary:hover{background:var(--gem-70)}
+.linkbtn{border:none;background:none;padding:0;color:var(--primary);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+
+/* filters */
+.filters{position:sticky;top:0;z-index:20;background:var(--white);border-bottom:1px solid var(--carbon-10);box-shadow:var(--shadow-sm)}
+.filters .page{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-top:8px;padding-bottom:8px}
+.filterleft{display:flex;flex-direction:column;gap:8px;flex:none;max-width:100%}
+.fieldrow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 18px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select{font:inherit;font-size:14px;color:var(--carbon-90);border:1px solid var(--carbon-20);border-radius:var(--radius-md);padding:6px 9px;background:var(--white);min-height:34px}
+.field select{min-width:150px}
+.chips{display:flex;gap:6px}
+.chip{border:1px solid var(--carbon-20);background:var(--white);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--carbon-70);min-height:34px}
+.chip[aria-pressed="true"]{background:var(--gem-5);border-color:var(--primary);color:var(--gem-70);font-weight:600}
+.filters #resetBtn{margin-left:auto}  /* stays at the right edge whether or not the outage notice shows */
+.scopebar{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px;color:var(--carbon-70);padding-top:2px}
+.scopebar .pill{display:inline-flex;align-items:center;gap:6px;background:var(--gem-5);color:var(--gem-70);border-radius:999px;padding:2px 10px;font-weight:600;font-size:12.5px}
+.scopebar .pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--primary)}
+.scopebar b{color:var(--carbon-90)}
+
+/* banners */
+.banners{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.banner{display:flex;gap:12px;align-items:flex-start;border-radius:var(--radius-lg);padding:8px 14px;font-size:13.5px;line-height:1.45;border:1px solid var(--carbon-10);background:var(--white)}
+.banner .ico{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;margin-top:1px}
+.banner.def .ico{background:var(--gem-10);color:var(--gem-70)}
+.banner.warn{background:var(--papaya-10);border-color:#f3cf8f}
+/* outage notice lives inside the sticky filter bar (between Team and Reset), so it is always visible */
+.outage-inbar{flex:100 1 240px;max-width:640px;align-self:stretch;display:flex}
+.outage-inbar[hidden]{display:none}
+.outage-inbar .banner{flex:1;align-items:center}
+.outage-inbar .banner.compact .linkbtn{white-space:normal;text-align:left}
+.outage-inbar .banner > p{min-width:0}
+.outage-inbar .banner{gap:8px;padding:5px 10px;font-size:12px;line-height:1.35}
+.outage-inbar .banner .ico{width:18px;height:18px;font-size:11px;margin-top:1px}
+.banner.compact b{margin-right:6px}
+.banner.compact .msg{color:var(--carbon-80);margin-right:6px}
+.banner.compact .linkbtn{white-space:nowrap}
+.banner.warn .ico{background:var(--papaya-60);color:var(--white)}
+.banner.err{background:var(--red-10);border-color:#f5b5b0}
+.banner.err .ico{background:var(--red-60);color:var(--white)}
+.banner b{color:var(--carbon-90)}
+.defgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.1fr);gap:0 20px;font-size:12px;line-height:1.35;flex:1;margin:0}
+.defgrid dt{font-weight:700;color:var(--carbon-90)}
+.defgrid dd{margin:0;color:var(--carbon-70)}
+.banner.def{padding:5px 14px}
+.banner.def .ico{width:18px;height:18px;font-size:11px;margin-top:0}
+
+/* data coverage */
+.coverage{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:8px 26px;align-items:center;margin-top:10px;background:var(--card);border:1px solid var(--carbon-10);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:8px 16px}
+.coverage[hidden]{display:none}
+.coverage .cv{display:flex;flex-direction:column;gap:1px}
+.coverage .cv .n{font-size:20px;font-weight:700;color:var(--carbon-90);line-height:1.15;font-variant-numeric:tabular-nums}
+.coverage .cv .n small{font-size:13px;font-weight:600;color:var(--carbon-70)}
+.coverage .cv.bad .n{color:var(--papaya-60)}
+.coverage .strip{display:flex;gap:2px;height:14px;margin-bottom:6px}
+.coverage .strip i{flex:1;border-radius:1px;background:var(--s-used);min-width:2px}
+.coverage .strip i.out{background:repeating-linear-gradient(135deg,var(--papaya-60) 0 2px,var(--papaya-10) 2px 4px)}
+.coverage .cvnote{font-size:12.5px;color:var(--carbon-70);line-height:1.4}
+.coverage .cvnote b{color:var(--carbon-90)}
+
+/* KPI strip */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+.kpi .dec{display:flex;height:8px;border-radius:2px;overflow:hidden;background:var(--s-track);margin:3px 0 1px}
+.kpi .dec i{height:100%}
+.kpi .declist{display:flex;flex-direction:column;gap:0;font-size:12px;color:var(--carbon-70)}
+.kpi .declist span{display:inline-flex;align-items:center;gap:5px}
+.kpi .declist b{color:var(--carbon-90);font-variant-numeric:tabular-nums}
+.kpi .note{font-size:11.5px;line-height:1.35;color:var(--muted)}
+.peaks{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:12.5px}
+.peaks .li{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;white-space:nowrap}
+.peaks .li .r{width:12px}
+.peaks .li .v{margin-left:auto}
+.peaks .li .r{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--primary)}
+.peaks .li .d{font-weight:600;color:var(--carbon-90)}
+.peaks .li .v{font-variant-numeric:tabular-nums;color:var(--carbon-70)}
+.peaks .li .v b{color:var(--carbon-90)}
+.kpi{background:var(--card);border:1px solid var(--carbon-10);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:10px 12px;text-align:left;display:flex;flex-direction:column;gap:3px;color:inherit;line-height:1.35}
+button.kpi:hover{border-color:var(--carbon-20);box-shadow:var(--shadow-md)}
+.kpi .overline{letter-spacing:.02em}
+.kpi .big{font-size:24px;font-weight:700;color:var(--carbon-90);line-height:1.15;font-variant-numeric:tabular-nums}
+.kpi .big small{font-size:15px;font-weight:600;color:var(--carbon-70)}
+.kpi .sub{font-size:12.5px;line-height:1.35;color:var(--muted)}
+.kpi .sub b{color:var(--carbon-80)}
+.kpi .hint{font-size:11.5px;color:var(--primary);margin-top:auto;padding-top:2px}
+
+/* cards & grid */
+.grid{display:grid;gap:14px;margin-top:14px}
+.g-main{grid-template-columns:minmax(0,1.65fr) minmax(0,1fr)}
+.g-q2{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--card);border:1px solid var(--carbon-10);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:16px 18px;min-width:0}
+.cardhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.cardhead p{color:var(--muted);font-size:13px;margin-top:2px}
+.qnum{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:var(--radius-sm);background:var(--primary);color:var(--white);font-family:var(--mono);font-size:11px;font-weight:600;margin-right:8px;vertical-align:2px}
+.seg{display:inline-flex;border:1px solid var(--carbon-20);border-radius:var(--radius-md);overflow:hidden;flex:none}
+.seg button{border:none;background:var(--white);padding:5px 11px;font-size:13px;color:var(--carbon-70)}
+.seg button+button{border-left:1px solid var(--carbon-20)}
+.seg button[aria-pressed="true"]{background:var(--gem-5);color:var(--gem-70);font-weight:600}
+.sectiontitle{display:flex;align-items:baseline;gap:10px;margin-top:26px;padding-bottom:8px;border-bottom:1px solid var(--carbon-10)}
+.sectiontitle h2{flex:none}
+.sectiontitle p{color:var(--muted);font-size:13.5px}
+
+/* chart */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--carbon-70);margin:2px 0 6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:2px;display:inline-block}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .bar{cursor:pointer}
+.chart .bar:hover .hit,.chart .bar:focus .hit{fill:var(--carbon-5)}
+.chart .bar:focus{outline:none}
+.chart text{font-family:var(--sans);fill:var(--carbon-50);font-size:12px}
+.chart .lbl{fill:var(--carbon-80);font-weight:600;font-size:12.5px}
+.chart .xl{fill:var(--carbon-80);font-size:12.5px}
+
+/* tables */
+.tablewrap{overflow-x:auto;border:1px solid var(--carbon-10);border-radius:var(--radius-lg)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--carbon-10);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--subtle);vertical-align:bottom;white-space:normal}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover{background:var(--gem-5)}
+tbody tr.click td:first-child{color:var(--primary);font-weight:600}
+tfoot td{font-weight:700;color:var(--carbon-90);background:var(--subtle);border-top:1px solid var(--carbon-20);border-bottom:none}
+td.num,th.num{font-variant-numeric:tabular-nums}
+/* floor table: Desks → No-show rate columns share one width; Floor and check-in days size to content */
+#mainTable th:nth-child(n+3){width:10%}
+.agree{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.agree .ok{color:var(--cilantro-60);font-weight:700}
+.agree .bad{color:var(--red-60);font-weight:700}
+
+/* heatmap */
+.heat td{text-align:center;font-variant-numeric:tabular-nums;font-weight:600;padding:9px 6px}
+.heat td.cell{cursor:pointer;border:2px solid var(--white)}
+.heat td.cell:hover{outline:2px solid var(--carbon-80);outline-offset:-2px}
+.heat td:first-child{text-align:left;font-weight:600;color:var(--carbon-80)}
+.heat th{text-align:center}
+.heat tr.allrow td{border-top:1px solid var(--carbon-20)}
+.scale{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:8px}
+.scale .ramp{height:8px;width:120px;border-radius:2px;background:linear-gradient(90deg,#fff,color-mix(in srgb,var(--gem-60) 80%,white));border:1px solid var(--carbon-10)}
+
+/* three-floor capacity (evidence only, neutral colours — no verdict) */
+.g-cap{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.capcard{border-top:3px solid var(--carbon-80)}
+.caphead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.caphead .big{font-size:28px;font-weight:700;color:var(--carbon-90);line-height:1.1;font-variant-numeric:tabular-nums}
+.caphead .big small{font-size:15px;font-weight:600;color:var(--carbon-70)}
+.gauge{display:grid;grid-template-columns:190px minmax(0,1fr) 92px;align-items:center;gap:9px 12px;font-size:13px}
+.gauge .lab{color:var(--carbon-80);line-height:1.25;display:flex;align-items:center;gap:7px}
+.gauge .lab small{display:block;color:var(--muted);font-size:11.5px}
+.gauge .trk{position:relative;height:16px;background:var(--carbon-5);border-radius:2px}
+.gauge .fill{position:absolute;left:0;top:0;bottom:0;border-radius:2px}
+.gauge .mark{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--carbon-90)}
+.gauge .mark.soft{width:0;border-left:2px dashed var(--carbon-50);background:none}
+.gauge .val{font-weight:700;color:var(--carbon-90);text-align:right;font-variant-numeric:tabular-nums}
+.gauge .val small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
+.gaugekey{position:relative;height:16px;font-size:11.5px;color:var(--muted);margin:4px 104px 0 202px}
+.gaugekey span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.gaugekey span:first-child{transform:none}
+.footnote{font-size:12px;color:var(--muted);margin-top:10px}
+.footnote b{color:var(--carbon-80)}
+.thr td{vertical-align:middle}
+.thr td.cnt{cursor:pointer}
+.thr td.cnt:hover{background:var(--gem-5)}
+.thr td .n{font-size:22px;font-weight:700;color:var(--carbon-90);font-variant-numeric:tabular-nums;line-height:1.1}
+.thr td .n small{font-size:13px;font-weight:600;color:var(--carbon-70)}
+.thr td .of{display:block;font-size:11.5px;color:var(--muted)}
+.thr th.col-b,.thr th.col-a{text-align:right}
+.thr td .tl{font-weight:600;color:var(--carbon-90)}
+.thr td .tl small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.capsum{font-size:13.5px;color:var(--carbon-80);margin-top:10px;line-height:1.5}
+.capsum b{color:var(--carbon-90)}
+.daily .bar{cursor:pointer}
+.daily .bar:hover .hit{fill:var(--carbon-5)}
+
+/* no-show concentration */
+.nsheat{table-layout:fixed}
+.nsheat th:first-child,.nsheat td:first-child{width:128px}
+.nsheat th{text-align:center}
+.nsheat td{text-align:center;padding:6px 4px;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap}
+.nsheat td:first-child{text-align:left;font-weight:600;color:var(--carbon-80);padding-left:10px;overflow:hidden;text-overflow:ellipsis}
+.nsheat td.nc{cursor:pointer;border:2px solid var(--white);border-bottom:2px solid var(--white)}
+.nsheat td.nc b{display:block;font-size:14px;font-weight:700;color:inherit}
+.nsheat td.nc small{display:block;font-size:11px;opacity:.85}
+.nsheat td.nc:hover,.nsheat td.nc:focus-visible{outline:2px solid var(--carbon-90);outline-offset:-2px}
+.nsheat td.sep,.nsheat th.sep{border-left:2px solid var(--carbon-20)}
+.nsheat tr.allrow td{border-top:2px solid var(--carbon-20)}
+.nsscale{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;font-size:12px;color:var(--muted);margin-top:8px}
+.nsscale .ramp{display:inline-block;height:8px;width:130px;border-radius:2px;vertical-align:middle;margin:0 6px;background:linear-gradient(90deg,#fff1e6,#f08a4b,#a3001b)}
+
+.nsbars{display:flex;flex-direction:column}
+.nsrow{display:grid;grid-template-columns:116px minmax(0,1fr) 208px;align-items:center;gap:12px;padding:8px 6px;border-bottom:1px solid var(--carbon-10);cursor:pointer;border-radius:var(--radius-md)}
+.nsrow:last-child{border-bottom:none}
+.nsgroup+.nsgroup{margin-top:12px}
+.nsgroup h3{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:0 6px 4px;border-bottom:1px solid var(--carbon-10)}
+.nsbars.stacked .nsrow{padding:5px 6px}
+/* stretch the no-show heatmap rows to match the taller "Booked vs used" card beside it */
+.nsheatcard{display:flex;flex-direction:column}
+.nsheatcard .tablewrap{flex:1}
+.nsheatcard .nsheat{height:100%}
+.nsrow:hover,.nsrow:focus-visible{background:var(--gem-5)}
+.nsrow .lab{font-weight:600;color:var(--primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nsrow .trk{display:flex;height:16px;background:var(--carbon-5);border-radius:2px;overflow:hidden}
+.nsrow .u{background:var(--s-used);height:100%}
+.nsrow .n{height:100%;margin-left:2px;background:repeating-linear-gradient(135deg,var(--s-noshow) 0 4px,color-mix(in srgb,var(--s-noshow) 40%,white) 4px 7px)}
+.nsrow .stat{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:8px;font-size:13px;line-height:1.3}
+.nsrow .stat small{grid-column:1 / -1;color:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
+.nsrow .stat span{font-variant-numeric:tabular-nums;color:var(--carbon-70)}
+.nsrow .stat span b{color:var(--carbon-90)}
+.badge{display:inline-block;min-width:52px;text-align:center;border-radius:999px;padding:2px 8px;font-weight:700;font-size:12.5px;font-variant-numeric:tabular-nums}
+.sw.striped{background:repeating-linear-gradient(135deg,var(--s-noshow) 0 3px,color-mix(in srgb,var(--s-noshow) 40%,white) 3px 5px)}
+
+/* states */
+.state{margin-top:18px;background:var(--white);border:1px dashed var(--carbon-20);border-radius:var(--radius-lg);padding:46px 24px;text-align:center;color:var(--carbon-70)}
+.state h2{margin-bottom:6px}
+.state p{max-width:60ch;margin:0 auto 14px;color:var(--muted)}
+.spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--carbon-10);border-top-color:var(--primary);margin:0 auto 12px;animation:spin 0.9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.muted{color:var(--muted)}
+
+/* tooltip */
+#tip{position:fixed;z-index:60;pointer-events:none;background:var(--carbon-90);color:var(--white);border-radius:var(--radius-md);padding:9px 11px;font-size:12.5px;line-height:1.45;box-shadow:var(--shadow-lg);max-width:280px;display:none}
+#tip b{color:var(--white)}
+#tip .r{display:flex;justify-content:space-between;gap:16px}
+#tip .k{display:inline-flex;align-items:center;gap:6px;color:var(--carbon-20)}
+#tip .hint{color:var(--carbon-30);margin-top:4px;font-size:11.5px}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgb(31 35 45 / .38);z-index:40;display:none}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(860px,94vw);background:var(--white);z-index:50;box-shadow:var(--shadow-lg);display:none;flex-direction:column}
+.drawer.open,.scrim.open{display:flex}
+.drawer header{padding:18px 22px 12px;border-bottom:1px solid var(--carbon-10)}
+.drawer header .row{display:flex;align-items:flex-start;gap:12px}
+.drawer header h2{flex:1;font-size:18px}
+.drawer .context{font-size:13px;color:var(--muted);margin-top:4px}
+.drawer .summary{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;font-size:13.5px}
+.drawer .summary b{color:var(--carbon-90)}
+.drawer .tabs{display:flex;gap:6px;margin-top:12px}
+.drawer .body{flex:1;overflow:auto;padding:0 22px 22px}
+.drawer table{font-size:13px}
+.drawer thead th{position:sticky;top:0;z-index:1}
+.drawer td,.drawer th{text-align:left}
+.close{border:1px solid var(--carbon-20);background:var(--white);border-radius:var(--radius-md);width:32px;height:32px;font-size:18px;line-height:1;color:var(--carbon-70)}
+.status{display:inline-flex;align-items:center;gap:7px}
+.status .d{width:9px;height:9px;border-radius:50%;flex:none}
+.status.used .d{background:var(--cilantro-40)}
+.status.no .d{background:var(--red-50)}
+.status.unk .d{background:var(--carbon-30)}
+.status small{color:var(--muted)}
+.more{display:flex;justify-content:center;gap:12px;align-items:center;padding:14px 0;color:var(--muted);font-size:13px}
+
+@media (max-width:1400px){
+  /* narrower laptops: give the in-bar outage notice a bit more room */
+  .fieldrow{column-gap:12px}
+  .filters .page{column-gap:12px}
+  .field select{min-width:0}
+  .outage-inbar .banner{font-size:11.5px;line-height:1.3;padding:4px 8px}
+}
+@media (max-width:1000px){
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:1100px){
+  .g-main,.g-q2,.g-cap{grid-template-columns:minmax(0,1fr)}
+  .defgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .coverage{grid-template-columns:auto auto}
+  .coverage .cvbar{grid-column:1 / -1}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="page">
+    <div class="brandrule"></div>
+    <div class="titleblock">
+      <h1>Brightline desk usage</h1>
+    </div>
+  </div>
+</header>
+
+<div class="filters" role="search" aria-label="Filters">
+  <div class="page">
+    <div class="filterleft">
+      <div class="fieldrow">
+        <div class="field"><label for="fStart">From</label><input type="date" id="fStart"></div>
+        <div class="field"><label for="fEnd">To</label><input type="date" id="fEnd"></div>
+        <div class="field"><label>Quick pick</label><div class="chips" id="monthChips"></div></div>
+        <div class="field"><label for="fFloor">Floor</label>
+          <select id="fFloor"></select></div>
+        <div class="field"><label for="fTeam">Team</label>
+          <select id="fTeam"></select></div>
+      </div>
+      <div class="scopebar" id="scopeBar" aria-live="polite"></div>
+    </div>
+    <div class="outage-inbar" id="outageBanner" hidden></div>
+    <button class="btn" id="resetBtn">Reset filters</button>
+  </div>
+</div>
+
+<main class="page" id="main">
+  <div id="loading" class="state" role="status">
+    <div class="spinner"></div>
+    <h2>Loading bookings…</h2>
+    <p>Reading the bookings export.</p>
+  </div>
+
+  <div id="app" hidden>
+    <div class="banners" id="banners"></div>
+
+    <section class="coverage" id="coverage" aria-label="How much reliable check-in data is in the current filters"></section>
+
+    <section class="kpis" id="kpis" aria-label="Headline numbers"></section>
+
+    <div id="empty" class="state" hidden></div>
+
+    <div id="content">
+      <div id="noCheckin" class="state" hidden></div>
+      <div id="usageSections">
+      <div class="sectiontitle"><h2><span class="qnum">1</span>How full is each floor?</h2><p>Counting people who checked in, not desks that were booked.</p></div>
+      <div class="grid g-main">
+        <div class="card">
+          <div class="cardhead">
+            <div>
+              <h2 id="chartTitle">Average desks per office day</h2>
+              <p>Each bar is the full set of desks on an average reliable check-in day. Click a bar or a row to see the bookings behind it.</p>
+            </div>
+            <div class="seg" id="dimSeg" role="group" aria-label="Group chart by">
+              <button data-dim="floor" aria-pressed="true">By floor</button>
+              <button data-dim="dow" aria-pressed="false">By day of week</button>
+            </div>
+          </div>
+          <div class="legend">
+            <span><i class="sw" style="background:var(--s-used)"></i>Actually used (checked in)</span>
+            <span><i class="sw" style="background:var(--s-noshow)"></i>Booked but unused (no-show)</span>
+            <span><i class="sw" style="background:var(--s-track);border:1px solid var(--carbon-20)"></i><span id="trackLabel">Not booked</span></span>
+          </div>
+          <div class="chart" id="chart"></div>
+        </div>
+
+        <div class="card">
+          <div class="cardhead"><div><h2>Desk usage by floor and day</h2><p>Share of that floor's desks actually used on an average reliable office day. Click a cell for the bookings.</p></div></div>
+          <div class="tablewrap"><table class="heat" id="heat"></table></div>
+          <div class="scale"><span>0%</span><span class="ramp"></span><span>100% of desks used</span></div>
+          <p class="footnote" id="heatNote"></p>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="tablewrap"><table id="mainTable"></table></div>
+        <div class="agree" id="agree"></div>
+      </div>
+
+      <div class="sectiontitle"><h2><span class="qnum">2</span>How much space is booked and never used?</h2><p id="q2sub"></p></div>
+      <div class="grid g-q2">
+        <div class="card nsheatcard">
+          <div class="cardhead"><div><h2>No-shows by team and day of week</h2>
+            <p>Each cell shows the share of that team's bookings on that weekday that were never used, and how many desk-days that wasted. Teams, not individuals. Click a cell to see the bookings.</p></div></div>
+          <div class="tablewrap"><table class="nsheat" id="nsHeat"></table></div>
+          <div class="nsscale">
+            <span>No-show rate <span class="ramp"></span></span><span id="nsScaleTxt"></span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cardhead">
+            <div><h2>Booked vs used</h2><p>Sorted by the most wasted desk-days. Click a row for the bookings.</p></div>
+            <div class="seg" id="nsSeg" role="group" aria-label="Break down by">
+              <button data-ns="floorteam" aria-pressed="true">Floor &amp; team</button>
+              <button data-ns="dow" aria-pressed="false">By day</button>
+            </div>
+          </div>
+          <div class="legend">
+            <span><i class="sw" style="background:var(--s-used)"></i>Actually used</span>
+            <span><i class="sw striped"></i>Booked but unused</span>
+          </div>
+          <div class="nsbars" id="nsBars"></div>
+        </div>
+      </div>
+      </div><!-- /usageSections -->
+
+      <div class="sectiontitle"><h2><span class="qnum">3</span>Could demand fit within three floors?</h2><p>Daily booking demand and recorded arrivals, compared with the desks on three floors. Evidence only — not a recommendation.</p></div>
+      <div id="capSection"></div>
+    </div>
+  </div>
+</main>
+
+<div id="tip" role="tooltip"></div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <header>
+    <div class="row"><h2 id="dTitle"></h2><button class="close" id="dClose" aria-label="Close">×</button></div>
+    <div class="context" id="dContext"></div>
+    <div class="summary" id="dSummary"></div>
+    <div class="tabs" id="dTabs"></div>
+  </header>
+  <div class="body" id="dBody"></div>
+</aside>
+
+<script src="data.js"></script>
+<script>
+"use strict";
+/* ───────────────────────── Business rules (one place) ─────────────────────────
+   Every booking belongs to its booking date (the day the desk was booked FOR),
+   never to the day the booking was created.
+
+   Used desk  : a booking with a check-in time. Any check-in counts, including the
+                ~1 in 5 same-day bookings whose booking was logged after the person
+                had already checked in (walk-ins).
+   Booked but unused (no-show): a booking with no check-in, on a reliable check-in day.
+   Desk usage : used desks ÷ (desks × reliable check-in days in the period).
+   Office day : a weekday in the selected dates that has bookings in the export.
+   Reliable check-in day: an office day that is not an outage day.
+   Outage day : an office day with bookings but zero check-ins anywhere in the building.
+                That pattern means the check-in system wasn't recording.
+                - Booking-demand numbers (desks booked, days above a threshold)
+                  INCLUDE outage days: the bookings are real.
+                - Check-in numbers (used, desk usage, no-shows, arrivals) EXCLUDE
+                  them: missing check-ins are unknown, not zero.               */
+const CAPACITY = { 1: 90, 2: 110, 3: 110, 4: 90 };
+const THREE_FLOOR_DESKS = 310;                                  // assumed capacity with one 90-desk floor given back
+const NEAR_SHARE = 0.85;                                        // "near capacity" reference
+const NEAR_DESKS = Math.ceil(THREE_FLOOR_DESKS * NEAR_SHARE);   // 263.5 → 264
+const NS_LO = 0.10, NS_HI = 0.55; // no-show heatmap colour range, fixed so a colour means the same under every filter
+
+const FLOORS = Object.keys(CAPACITY).map(Number);
+const TOTAL_DESKS = FLOORS.reduce((s, f) => s + CAPACITY[f], 0);
+const DOW_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DOW_LONG = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+const $ = id => document.getElementById(id);
+let DB = null;
+const S = { start: null, end: null, floor: "all", team: "all", dim: "floor", nsDim: "floorteam" };
+let M = null; // current computed view
+
+/* ───────────────────────── Formatting ───────────────────────── */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const int = n => Math.round(n).toLocaleString("en-US");
+const pct = (x, d = 1) => (x * 100).toFixed(d) + "%";
+const utc = d => new Date(d + "T00:00:00Z");
+const dowOf = d => utc(d).getUTCDay();
+function fmtDate(d, withYear) {
+  const t = utc(d);
+  return `${DOW_SHORT[t.getUTCDay()]} ${MONTHS[t.getUTCMonth()]} ${t.getUTCDate()}${withYear ? ", " + t.getUTCFullYear() : ""}`;
+}
+/* "Jul 13–16, 2026" — compact runs without weekdays, for the outage banner */
+function fmtRunsShort(dates) {
+  const runs = [];
+  for (const d of dates) {
+    const last = runs[runs.length - 1];
+    if (last && (addDays(last[1], 1) === d || (dowOf(last[1]) === 5 && addDays(last[1], 3) === d))) last[1] = d;
+    else runs.push([d, d]);
+  }
+  const md = d => `${MONTHS[utc(d).getUTCMonth()]} ${utc(d).getUTCDate()}`;
+  const yr = dates[dates.length - 1].slice(0, 4);
+  return runs.map(([a, b]) => a === b ? md(a) : a.slice(0, 7) === b.slice(0, 7) ? `${md(a)}–${utc(b).getUTCDate()}` : `${md(a)} – ${md(b)}`).join(", ") + ", " + yr;
+}
+function fmtTime(min) {
+  const m = ((min % 1440) + 1440) % 1440, h = Math.floor(m / 60), mm = String(m % 60).padStart(2, "0");
+  return `${h % 12 || 12}:${mm} ${h < 12 ? "AM" : "PM"}`;
+}
+function addDays(d, n) { return new Date(utc(d).getTime() + n * 864e5).toISOString().slice(0, 10); }
+function fmtRange(a, b) { return a === b ? fmtDate(a, true) : `${fmtDate(a)} – ${fmtDate(b, true)}`; }
+const plural = (n, one, many = one + "s") => `${int(n)} ${n === 1 ? one : many}`;
+function bookedLabel(r) {
+  const off = Math.floor(r.booked / 1440);
+  if (off === 0) return `Same day, ${fmtTime(r.booked)}`;
+  return `${fmtDate(addDays(r.date, off))}, ${fmtTime(r.booked)}`;
+}
+/* Describe a set of dates as compact runs: "Mon 13 – Thu 16 Jul" */
+function describeDates(dates) {
+  const runs = [];
+  for (const d of dates) {
+    const last = runs[runs.length - 1];
+    // consecutive office days (allowing a weekend gap) join one run
+    if (last && (addDays(last[1], 1) === d || (dowOf(last[1]) === 5 && addDays(last[1], 3) === d))) last[1] = d;
+    else runs.push([d, d]);
+  }
+  return runs.map(([a, b]) => fmtRange(a, b)).join("; ");
+}
+
+/* ───────────────────────── Loading & normalising ───────────────────────── */
+function fromDataJs(d) {
+  const rows = d.rows.map(r => ({ id: r[0], date: d.dates[r[1]], floor: r[2], desk: r[3], team: d.teams[r[4]], booked: r[5], checked: r[6] }));
+  return buildDB(rows, d.source, d.skippedRows || 0);
+}
+
+function parseCSV(text) {
+  const out = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; }
+      else f += c;
+    } else if (c === '"') q = true;
+    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(f); f = ""; if (row.length > 1 || row[0] !== "") out.push(row); row = [];
+    } else f += c;
+  }
+  if (f !== "" || row.length) { row.push(f); out.push(row); }
+  return out;
+}
+
+function fromCSV(text, name) {
+  const grid = parseCSV(text.replace(/^﻿/, ""));
+  const head = grid.shift().map(h => h.trim());
+  const need = ["booking_id", "booking_date", "desk_id", "floor", "team", "booked_at", "checked_in_at"];
+  const missing = need.filter(c => !head.includes(c));
+  if (missing.length) throw new Error(`This file doesn't look like a bookings export — it's missing: ${missing.join(", ")}.`);
+  const ix = Object.fromEntries(need.map(c => [c, head.indexOf(c)]));
+  const mins = (ts, day) => {
+    const m = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})/.exec(ts.trim());
+    if (!m) return NaN;
+    return Math.round((utc(m[1]) - utc(day)) / 6e4) + (+m[2]) * 60 + (+m[3]);
+  };
+  const rows = []; let skipped = 0;
+  for (const g of grid) {
+    const date = (g[ix.booking_date] || "").trim(), floor = parseInt(g[ix.floor], 10);
+    const booked = mins(g[ix.booked_at] || "", date);
+    const ci = (g[ix.checked_in_at] || "").trim();
+    const checked = ci ? mins(ci, date) : null;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(floor) || isNaN(booked) || Number.isNaN(checked)) { skipped++; continue; }
+    rows.push({ id: g[ix.booking_id], date, floor, desk: g[ix.desk_id], team: (g[ix.team] || "").trim(), booked, checked });
+  }
+  if (!rows.length) throw new Error("No readable bookings were found in this file.");
+  return buildDB(rows, name, skipped);
+}
+
+function buildDB(rows, source, skipped) {
+  const perDate = new Map();
+  for (const r of rows) {
+    r.dow = dowOf(r.date);
+    r.used = r.checked !== null && r.checked !== undefined;
+    r.walkin = r.used && r.checked < r.booked;
+    const p = perDate.get(r.date) || { b: 0, c: 0 };
+    p.b++; if (r.used) p.c++;
+    perDate.set(r.date, p);
+  }
+  const dates = [...perDate.keys()].sort();
+  const untrusted = new Set(dates.filter(d => perDate.get(d).c === 0));
+  for (const r of rows) r.untrusted = untrusted.has(r.date);
+  const teams = [...new Set(rows.map(r => r.team))].sort();
+  const unknownFloors = [...new Set(rows.map(r => r.floor))].filter(f => !CAPACITY[f]);
+  return { rows, dates, untrusted, teams, source, skipped, unknownFloors, min: dates[0], max: dates[dates.length - 1] };
+}
+
+/* ───────────────────────── Computation ───────────────────────── */
+function tally(rows, keyFn) {
+  const m = new Map();
+  for (const r of rows) {
+    const k = keyFn(r); let t = m.get(k);
+    if (!t) m.set(k, t = { booked: 0, used: 0 });
+    t.booked++; if (r.used) t.used++;
+  }
+  return m;
+}
+
+function compute() {
+  const { start, end, floor, team } = S;
+  const inRange = d => d >= start && d <= end;
+  const floors = floor === "all" ? FLOORS : [+floor];
+  const capacity = floors.reduce((s, f) => s + CAPACITY[f], 0);
+  // Office days are building-wide (the outage hit the whole building), so floor/team filters don't change them.
+  const allDays = DB.dates.filter(inRange);                          // every office day: booking demand
+  const officeDays = allDays.filter(d => !DB.untrusted.has(d));      // reliable check-in days: usage
+  const untrustedDays = allDays.filter(d => DB.untrusted.has(d));
+  // Rows are assigned to days by booking date (r.date), never by when the booking was created.
+  const allRows = DB.rows.filter(r => inRange(r.date) && floors.includes(r.floor) && (team === "all" || r.team === team));
+  const rows = allRows.filter(r => !r.untrusted);       // check-in dependent numbers use only these
+  const excluded = allRows.filter(r => r.untrusted);
+
+  const booked = rows.length, used = rows.reduce((s, r) => s + r.used, 0), noShow = booked - used;
+  const nDays = officeDays.length, nAll = allDays.length;
+  const daysByDow = new Map(), outByDow = new Map();
+  for (const d of officeDays) { const w = dowOf(d); daysByDow.set(w, (daysByDow.get(w) || 0) + 1); }
+  for (const d of untrustedDays) { const w = dowOf(d); outByDow.set(w, (outByDow.get(w) || 0) + 1); }
+
+  const mk = (key, label, days, desks, t) => ({ key, label, days, desks, booked: t.booked, used: t.used, noShow: t.booked - t.used });
+  const tD = tally(rows, r => r.dow);
+  const byDow = DOW_ORDER.filter(w => daysByDow.has(w))
+    .map(w => mk(w, DOW_LONG[w], daysByDow.get(w), capacity, tD.get(w) || { booked: 0, used: 0 }));
+  const tF = tally(rows, r => r.floor);
+  const byFloor = floors.map(f => mk(f, `Floor ${f}`, nDays, CAPACITY[f], tF.get(f) || { booked: 0, used: 0 }));
+  const tFD = tally(rows, r => r.floor + "|" + r.dow);
+  const tT = tally(rows, r => r.team);
+  const tTD = tally(rows, r => r.team + "|" + r.dow);
+  const byTeam = [...tT].map(([k, t]) => ({ key: k, label: k, booked: t.booked, used: t.used, noShow: t.booked - t.used }))
+    .sort((a, b) => b.noShow - a.noShow || a.label.localeCompare(b.label));
+  // One entry per office day in range (zero-booking days included), keyed by booking date.
+  // used is null on outage days: unknown, not zero.
+  const tDay = tally(allRows, r => r.date);
+  const days = allDays.map(date => {
+    const t = tDay.get(date) || { booked: 0, used: 0 };
+    return { date, booked: t.booked, used: DB.untrusted.has(date) ? null : t.used, reliable: !DB.untrusted.has(date) };
+  });
+  const relDays = days.filter(d => d.reliable);
+  const peaks = [...relDays].sort((a, b) => b.used - a.used || a.date.localeCompare(b.date));
+  const allBooked = allRows.length;
+
+  return {
+    floors, capacity, allDays, officeDays, untrustedDays, allRows, rows, excluded, booked, used, noShow, nDays, nAll,
+    allBooked, avgBooked: nAll ? allBooked / nAll : 0,
+    usage: nDays ? used / (capacity * nDays) : 0, nsRate: booked ? noShow / booked : 0,
+    byDow, byFloor, tFD, tTD, daysByDow, outByDow, byTeam, days, relDays, peaks,
+    walkins: rows.filter(r => r.walkin).length,
+  };
+}
+
+/* ───────────────────────── Rendering ───────────────────────── */
+function render() {
+  readInputs();
+  M = compute();
+  syncChips();
+  const badRange = S.start > S.end;
+  renderScope(badRange);
+  renderBanners(badRange);
+  renderCoverage(badRange);
+  const empty = badRange || M.allBooked === 0;
+  renderKPIs(empty);
+  $("content").hidden = empty;
+  $("empty").hidden = !empty;
+  if (empty) { renderEmpty(badRange); return; }
+  // Sections 1–2 depend on check-ins; section 3 still shows booking demand when they can't be measured.
+  const noUsage = M.booked === 0;
+  $("usageSections").hidden = noUsage;
+  $("noCheckin").hidden = !noUsage;
+  if (noUsage) renderNoCheckin();
+  else { renderChart(); renderMainTable(); renderHeat(); renderNoShows(); }
+  renderCapacity();
+}
+
+function renderScope(badRange) {
+  const parts = [S.floor === "all" ? "All floors" : `Floor ${S.floor}`, S.team === "all" ? "All teams" : esc(S.team), fmtRange(S.start, S.end)];
+  $("scopeBar").innerHTML = `<span class="pill">All figures reflect the current filters</span>
+    <span>${parts.map(p => `<b>${p}</b>`).join(" · ")}${badRange ? "" : ` · ${plural(M.nAll, "office day")}`}</span>`;
+}
+
+function renderBanners(badRange) {
+  const b = [];
+  b.push(`<div class="banner def"><span class="ico" aria-hidden="true">i</span><dl class="defgrid">
+    <div><dt>Used desk</dt><dd>A booking where the person checked in that day.</dd></div>
+    <div><dt>Booked but unused</dt><dd>A desk that was booked, but no arrival was recorded on a day with reliable check-in data.</dd></div>
+    <div><dt>Desk usage</dt><dd>Desks actually used ÷ available desks.</dd></div>
+    <div><dt>Office day</dt><dd>A weekday with bookings in the selected dates.</dd></div>
+    <div><dt>Reliable check-in day</dt><dd>An office day where arrival data was recorded normally.</dd></div>
+  </dl></div>`);
+  if (badRange) b.push(`<div class="banner err"><span class="ico">!</span><div><b>The start date is after the end date.</b> Pick a start date on or before ${fmtDate(S.end, true)}.</div></div>`);
+  let outage = "";
+  if (!badRange && M.untrustedDays.length) {
+    const n = M.untrustedDays.length;
+    const msg = `Check-in system was down. ${n === 1 ? "This day is" : "These days are"} excluded from desk usage and booked-but-unused calculations.`;
+    // One flowing paragraph (no forced line breaks): the full text always shows and wraps only when it must.
+    outage = `<div class="banner warn compact" role="alert"><span class="ico">!</span><p>
+      <b>Check-in data unavailable · ${esc(fmtRunsShort(M.untrustedDays))}</b>
+      <span class="msg">${esc(msg)}</span>
+      ${M.excluded.length ? `<button class="linkbtn" data-open="excluded">View the ${int(M.excluded.length)} bookings from ${n === 1 ? "that day" : "those days"}</button>` : ""}
+    </p></div>`;
+  }
+  $("outageBanner").innerHTML = outage;
+  $("outageBanner").hidden = !outage;
+  if (DB.unknownFloors.length) b.push(`<div class="banner warn"><span class="ico">!</span><div>This export has bookings on floor(s) ${DB.unknownFloors.join(", ")}, which have no desk count set. Those bookings are not included.</div></div>`);
+  if (DB.skipped) b.push(`<div class="banner warn"><span class="ico">!</span><div>${int(DB.skipped)} rows in the export couldn't be read (bad dates or times) and are not included.</div></div>`);
+  $("banners").innerHTML = b.join("");
+}
+
+function scopeText() {
+  const parts = [S.floor === "all" ? "All floors" : `Floor ${S.floor}`];
+  if (S.team !== "all") parts.push(S.team);
+  parts.push(fmtRange(S.start, S.end));
+  return parts.join(" · ");
+}
+
+function renderCoverage(badRange) {
+  const el = $("coverage");
+  el.hidden = badRange || !M.nAll;
+  if (el.hidden) { el.innerHTML = ""; return; }
+  const out = M.untrustedDays.length;
+  const strip = M.days.map(d => `<i class="${d.reliable ? "" : "out"}" title="${fmtDate(d.date, true)}: ${d.reliable ? "check-in data recorded" : "check-in data unavailable"}"></i>`).join("");
+  el.innerHTML = `
+    <div class="cv"><span class="overline">Office days with reliable check-in data</span><span class="n">${M.nDays} <small>${M.nDays === 1 ? "day" : "days"}</small></span></div>
+    <div class="cv${out ? " bad" : ""}"><span class="overline">Office days with unavailable check-in data</span><span class="n">${out} <small>${out === 1 ? "day" : "days"}</small></span></div>
+    <div class="cvbar">
+      <div class="strip" role="img" aria-label="${M.nDays} reliable and ${out} unavailable office days">${strip}</div>
+      <p class="cvnote"><b>Desk usage, arrivals and booked-but-unused</b> figures use only the ${plural(M.nDays, "reliable day")}.
+        <b>Desks booked</b> figures use all ${plural(M.nAll, "office day")}${out ? ", because bookings on the outage days are still real demand" : ""}.
+        <span class="muted">Each mark is one office day${out ? "; striped = check-in data unavailable" : ""}.</span></p>
+    </div>`;
+}
+
+const avgPerDay = (v, days) => (days ? v / days : 0);
+
+function renderKPIs(empty) {
+  const k = $("kpis"), cap = M.capacity;
+  const titles = ["Average desks booked", "Average desk usage", "Booked but unused", "Peak usage days"];
+  // Busiest floor / busiest weekday cards are switched off for now (code kept below, commented out):
+  // M.floors.length > 1 ? "Busiest floor" : "Selected floor", "Busiest weekday on average"
+  const dash = (t, s) => `<div class="kpi"><span class="overline">${t}</span><span class="big muted">—</span><span class="sub">${s}</span></div>`;
+  if (empty) {
+    k.innerHTML = titles.map((t, i) => dash(t, i === 0 ? "No bookings in this selection" : "Nothing to measure")).join("");
+    return;
+  }
+  const out = M.untrustedDays.length;
+  const bookedCard = `
+    <button class="kpi" data-open="demand">
+      <span class="overline">${titles[0]}</span>
+      <span class="big">${int(M.avgBooked)} <small>of ${int(cap)}</small></span>
+      <span class="sub"><b>${pct(M.avgBooked / cap)}</b> of desks booked on an average office day</span>
+      <span class="note">Average across ${plural(M.nAll, "office day")}${out === M.nAll ? ", none of which have check-in data" : out ? `, including the ${plural(out, "day")} without check-in data` : ""}. Booked does not mean anyone came in.</span>
+      <span class="hint">See these bookings →</span>
+    </button>`;
+  if (!M.nDays) {
+    k.innerHTML = bookedCard + titles.slice(1).map(t => dash(t, "No reliable check-in data in these dates")).join("");
+    return;
+  }
+  // Decomposition on the reliable-day denominator; "not booked" is the remainder so the three always add to the desk count.
+  const u = Math.round(M.used / M.nDays), n = Math.round(M.noShow / M.nDays), nb = Math.max(0, cap - u - n);
+  const teamNote = S.team !== "all" ? `<span class="note">Share of all ${int(cap)} desks${M.floors.length > 1 ? "" : ` on Floor ${M.floors[0]}`} used by ${esc(S.team)}.</span>` : "";
+
+  /* Busiest floor / busiest weekday cards — commented out for now.
+  // Busiest floor: ranked by actual desk usage, never by bookings
+  const fl = M.byFloor.map(g => ({ ...g, u: g.used / (g.desks * g.days) })).sort((a, b) => b.u - a.u || b.used - a.used);
+  const bf = fl[0];
+  let floorNote = M.floors.length > 1
+    ? `${int(avgPerDay(bf.used, bf.days))} of ${bf.desks} desks used on an average reliable office day. Ranked by desk usage, not bookings.`
+    : `Showing the selected floor only. Choose “All floors” to compare floors.`;
+  if (fl.length > 1 && bf.u - fl[1].u < 0.01) floorNote += ` ${fl[1].label} is within 1 point (${pct(fl[1].u)}), so treat them as roughly equal.`;
+
+  // Busiest weekday: average actual check-ins per reliable day of that weekday
+  const wd = M.byDow.map(g => ({ ...g, u: g.used / (g.desks * g.days) })).sort((a, b) => b.u - a.u);
+  const bw = wd[0];
+  const bwOut = M.outByDow.get(bw.key) || 0;
+  */
+
+  // Top 3 peak days by actual check-ins (reliable days only)
+  const top = M.peaks.slice(0, 3);
+  const tiedMore = M.peaks.slice(3).filter(d => d.used === top[top.length - 1].used).length;
+
+  k.innerHTML = bookedCard + `
+    <button class="kpi" data-open="used">
+      <span class="overline">${titles[1]}</span>
+      <span class="big">${pct(M.usage)}</span>
+      <span class="sub">On average, <b>${int(u)} of ${int(cap)}</b> desks were actually used each office day.</span>
+      <span class="dec" aria-hidden="true"><i style="width:${(u / cap) * 100}%;background:var(--s-used)"></i><i style="width:${(n / cap) * 100}%;background:var(--s-noshow)"></i></span>
+      <span class="declist">
+        <span><i class="sw" style="background:var(--s-used)"></i><b>${int(u)}</b> actually used</span>
+        <span><i class="sw" style="background:var(--s-noshow)"></i><b>${int(n)}</b> booked but unused</span>
+        <span><i class="sw" style="background:var(--s-track);border:1px solid var(--carbon-20)"></i><b>${int(nb)}</b> not booked</span>
+      </span>
+      <span class="note">Average across ${plural(M.nDays, "reliable check-in day")}.</span>${teamNote}
+      <span class="hint">See used desks →</span>
+    </button>
+    <button class="kpi" data-open="noshow">
+      <span class="overline">${titles[2]}</span>
+      <span class="big">${int(M.noShow)} <small>desk-days</small></span>
+      <span class="sub"><b>${pct(M.nsRate)}</b> of bookings had no recorded arrival: about <b>${int(n)}</b> desks a day.</span>
+      <span class="note">${int(M.noShow)} of ${int(M.booked)} bookings on reliable check-in days. Outage days are not counted as no-shows.</span>
+      <span class="hint">See booked-but-unused desks →</span>
+    </button>`
+    /* Busiest floor / busiest weekday cards — commented out for now.
+       (To restore: put their two titles back into `titles` and fix the indices below.)
+    <button class="kpi" data-open="floor" data-f="${bf.key}">
+      <span class="overline">${S.team !== "all" && M.floors.length > 1 ? `${titles[3]} for ${esc(S.team)}` : titles[3]}</span>
+      <span class="big">${esc(bf.label)}</span>
+      <span class="sub"><b>${pct(bf.u)}</b> desk usage · <b>${int(avgPerDay(bf.used, bf.days))}</b> people/day</span>
+      <span class="note">${floorNote}</span>
+      <span class="hint">See ${esc(bf.label)} bookings →</span>
+    </button>
+    <button class="kpi" data-open="dow" data-w="${bw.key}">
+      <span class="overline">${titles[4]}</span>
+      <span class="big">${DOW_LONG[bw.key]}</span>
+      <span class="sub"><b>${pct(bw.u)}</b> desk usage · <b>${int(avgPerDay(bw.used, bw.days))}</b> people/day</span>
+      <span class="note">Average over ${plural(bw.days, `reliable ${DOW_LONG[bw.key]}`)}${bwOut ? ` (${bwOut} more had no check-in data and ${bwOut === 1 ? "is" : "are"} left out)` : ""}.</span>
+      <span class="hint">See ${DOW_LONG[bw.key]} bookings →</span>
+    </button>
+    */
+    + `
+    <button class="kpi" data-open="peak">
+      <span class="overline">${titles[3]}</span>
+      <span class="peaks">${top.map((d, i) => `<span class="li"><span class="r">${i + 1}.</span><span class="d">${fmtDate(d.date)}</span><span class="v"><b>${int(d.used)}</b> used · ${pct(d.used / cap, 0)}</span></span>`).join("")}</span>
+      <span class="note">Ranked by desks actually used, reliable check-in days only.${tiedMore ? ` ${plural(tiedMore, "more day")} tied with #${top.length}.` : ""}</span>
+      <span class="hint">See ${top.length === 1 ? "that day's" : "these days'"} bookings →</span>
+    </button>`;
+}
+
+function renderEmpty(badRange) {
+  let h, p;
+  if (badRange) { h = "No bookings found for selected criteria"; p = "The date range is backwards. The start date needs to be on or before the end date."; }
+  else if (!M.nAll) {
+    h = "No bookings found for selected criteria";
+    p = `There are no bookings between ${fmtDate(S.start, true)} and ${fmtDate(S.end, true)}. The office isn't booked on weekends. This export covers weekdays from ${fmtDate(DB.min, true)} to ${fmtDate(DB.max, true)}.`;
+  } else {
+    h = "No bookings found for selected criteria";
+    p = `${S.team !== "all" ? esc(S.team) : "Nobody"} booked a desk${S.floor !== "all" ? ` on Floor ${S.floor}` : ""} between ${fmtDate(S.start, true)} and ${fmtDate(S.end, true)}. That isn't 0% desk usage, it just means there's nothing to measure.`;
+  }
+  $("empty").innerHTML = `<h2>${h}</h2><p>${p}</p><button class="btn primary" id="emptyReset">Reset filters</button>`;
+}
+
+function renderNoCheckin() {
+  let h, p;
+  if (!M.nDays) {
+    h = "Desk usage can't be measured for these dates";
+    p = `Every office day in this selection (${esc(describeDates(M.untrustedDays))}) falls in the check-in outage, so there is no record of who arrived. Booking demand is still shown below. Widen the date range to see desk usage and booked-but-unused desks.`;
+  } else {
+    h = "No bookings on days with reliable check-in data";
+    p = `${S.team !== "all" ? esc(S.team) : "Nobody"} booked a desk${S.floor !== "all" ? ` on Floor ${S.floor}` : ""} on the ${plural(M.nDays, "reliable check-in day")} in this selection, so there's nothing to measure for desk usage or booked-but-unused desks.`;
+  }
+  $("noCheckin").innerHTML = `<h2>${h}</h2><p>${p}</p>${M.excluded.length ? `<button class="btn" data-open="excluded">View the ${int(M.excluded.length)} bookings from the outage days</button>` : ""}`;
+}
+
+/* chart + table share one group list, so they cannot disagree */
+function groups() { return S.dim === "dow" ? M.byDow : M.byFloor; }
+
+function renderChart() {
+  const G = groups(), el = $("chart");
+  $("chartTitle").textContent = S.dim === "dow" ? "Average desks per office day, by day of week" : "Average desks per office day, by floor";
+  $("trackLabel").textContent = S.team === "all" ? "Not booked" : `Not booked by ${S.team}`;
+  const W = Math.max(420, el.clientWidth || 700), H = 270, padL = 44, padR = 8, padT = 22, padB = 30;
+  const yMax = Math.max(...G.map(g => g.desks));
+  const step = yMax > 200 ? 100 : yMax > 60 ? 20 : 10;
+  const top = Math.ceil(yMax / step) * step;
+  const y = v => padT + (H - padT - padB) * (1 - v / top);
+  const band = (W - padL - padR) / G.length, bw = Math.min(88, band * 0.56);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Stacked bars of used, no-show and unbooked desks per average office day">`;
+  for (let v = 0; v <= top; v += step) s += `<line x1="${padL}" x2="${W - padR}" y1="${y(v)}" y2="${y(v)}" stroke="#ebebf0"/><text x="${padL - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  s += `<text x="${padL - 36}" y="${padT - 10}" text-anchor="start">desks</text>`;
+  G.forEach((g, i) => {
+    const cx = padL + band * i + band / 2, x = cx - bw / 2;
+    const u = g.used / g.days, n = g.noShow / g.days;
+    const yU = y(u), yN = y(u + n), yC = y(g.desks), base = y(0);
+    const gap = 1;
+    s += `<g class="bar" tabindex="0" role="button" data-i="${i}" aria-label="${esc(g.label)}: ${int(u)} used, ${int(n)} booked but unused per day on average, ${pct(g.used / (g.desks * g.days))} desk usage">
+      <rect class="hit" x="${padL + band * i + 2}" y="${padT - 18}" width="${band - 4}" height="${H - padT - padB + 18}" fill="transparent" rx="4"/>
+      <rect x="${x}" y="${yC}" width="${bw}" height="${base - yC}" fill="var(--s-track)" rx="4"/>
+      <rect x="${x}" y="${yN}" width="${bw}" height="${Math.max(0, yU - yN - gap)}" fill="var(--s-noshow)"/>
+      <rect x="${x}" y="${yU}" width="${bw}" height="${Math.max(0, base - yU)}" fill="var(--s-used)"/>
+      <text class="lbl" x="${cx}" y="${yC - 6}" text-anchor="middle">${pct(g.used / (g.desks * g.days), 0)} used</text>
+      <text class="xl" x="${cx}" y="${H - 10}" text-anchor="middle">${esc(S.dim === "dow" ? DOW_SHORT[g.key] : g.label)}</text>
+    </g>`;
+  });
+  s += `<line x1="${padL}" x2="${W - padR}" y1="${y(0)}" y2="${y(0)}" stroke="#a4a9b6"/></svg>`;
+  el.innerHTML = s;
+  el.querySelectorAll(".bar").forEach(b => {
+    const g = G[+b.dataset.i];
+    b.addEventListener("mousemove", e => showTip(e, tipFor(g)));
+    b.addEventListener("mouseleave", hideTip);
+    b.addEventListener("click", () => openGroup(g));
+    b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openGroup(g); } });
+  });
+}
+
+function tipFor(g) {
+  const r = (k, sw, v) => `<div class="r"><span class="k">${sw ? `<i class="sw" style="background:${sw}"></i>` : ""}${k}</span><b>${v}</b></div>`;
+  const u = Math.round(g.used / g.days), n = Math.round(g.noShow / g.days);
+  return `<b>${esc(g.label)}</b> · average over ${plural(g.days, "reliable check-in day")}
+    ${r("Actually used", "var(--s-used)", int(u))}
+    ${r("Booked but unused", "var(--s-noshow)", int(n))}
+    ${r(S.team === "all" ? "Not booked" : "Not booked by team", "#ebebf0", int(Math.max(0, g.desks - u - n)))}
+    ${r("Desks", "", int(g.desks))}
+    ${r("Desk usage", "", pct(g.used / (g.desks * g.days)))}
+    ${r("No-show rate", "", g.booked ? pct(g.noShow / g.booked) : "—")}
+    <div class="hint">Click to see these bookings</div>`;
+}
+
+function renderMainTable() {
+  const G = groups();
+  const outFor = g => (S.dim === "dow" && g.key !== undefined ? M.outByDow.get(g.key) || 0 : g.out || 0);
+  const row = (g, cls, attrs) => `<tr class="${cls}" ${attrs}>
+    <td>${esc(g.label)}</td><td class="num">${g.days}${outFor(g) ? ` <small class="muted" title="Days without check-in data, left out of this row">+${outFor(g)} unavailable</small>` : ""}</td><td class="num">${int(g.desks)}</td>
+    <td class="num">${int(g.booked)}</td><td class="num">${int(g.used)}</td><td class="num">${int(g.noShow)}</td>
+    <td class="num">${int(g.used / g.days)}</td><td class="num"><b>${pct(g.used / (g.desks * g.days))}</b></td>
+    <td class="num">${g.booked ? pct(g.noShow / g.booked) : "—"}</td></tr>`;
+  const total = { label: "Total", days: M.nDays, desks: M.capacity, booked: M.booked, used: M.used, noShow: M.noShow, out: M.untrustedDays.length };
+  $("mainTable").innerHTML = `<thead><tr>
+      <th>${S.dim === "dow" ? "Day of week" : "Floor"}</th><th class="num">Reliable check-in days</th><th class="num">Desks</th>
+      <th class="num">Bookings</th><th class="num">Actually used</th><th class="num">Booked but unused</th>
+      <th class="num">Avg used per day</th><th class="num">Desk usage</th><th class="num">No-show rate</th></tr></thead>
+    <tbody>${G.map((g, i) => row(g, "click", `tabindex="0" data-g="${i}"`)).join("")}</tbody>
+    <tfoot>${row(total, "", "")}</tfoot>`;
+  $("mainTable").querySelectorAll("tr[data-g]").forEach(tr => bindOpen(tr, () => openGroup(G[+tr.dataset.g])));
+
+  // Agreement check: chart groups, table rows and headline cards all derive from the same rows.
+  const sumUsed = G.reduce((s, g) => s + g.used, 0), sumBooked = G.reduce((s, g) => s + g.booked, 0);
+  const daysOk = S.dim === "floor" || G.reduce((s, g) => s + g.days, 0) === M.nDays;
+  const ok = sumUsed === M.used && sumBooked === M.booked && daysOk;
+  $("agree").innerHTML = ok
+    ? `<span class="ok">✓</span> Chart, table and headline cards all use the same ${int(M.booked)} bookings on ${plural(M.nDays, "reliable check-in day")}: ${int(M.used)} used ÷ (${int(M.capacity)} desks × ${M.nDays} days) = ${pct(M.usage)} desk usage.${M.untrustedDays.length ? ` The ${int(M.excluded.length)} bookings on the ${plural(M.untrustedDays.length, "day")} without check-in data are not in this table.` : ""}`
+    : `<span class="bad">!</span> Totals don't reconcile (${int(sumUsed)} vs ${int(M.used)} used). Please report this.`;
+}
+
+function heatColor(v) {
+  const p = Math.round(Math.min(1, v) * 80);
+  return `background:color-mix(in srgb, var(--gem-60) ${p}%, white);color:${p > 60 ? "#fff" : "var(--carbon-90)"}`;
+}
+function renderHeat() {
+  const dows = M.byDow.map(g => g.key);
+  const cell = (used, desks, days, attrs) => {
+    if (!days) return `<td class="muted">—</td>`;
+    const v = used / (desks * days);
+    return `<td class="cell" tabindex="0" ${attrs} style="${heatColor(v)}" title="${int(used / days)} of ${desks} desks used on an average reliable day (${plural(days, "day")})">${pct(v, 0)}</td>`;
+  };
+  let h = `<thead><tr><th style="text-align:left">Floor</th>${dows.map(w => `<th>${DOW_SHORT[w]}</th>`).join("")}<th>All days</th></tr></thead><tbody>`;
+  for (const f of M.floors) {
+    h += `<tr><td>Floor ${f} <span class="muted" style="font-weight:400">· ${CAPACITY[f]}</span></td>`;
+    for (const w of dows) { const t = M.tFD.get(f + "|" + w) || { used: 0 }; h += cell(t.used, CAPACITY[f], M.daysByDow.get(w), `data-f="${f}" data-w="${w}"`); }
+    const F = M.byFloor.find(g => g.key === f);
+    h += cell(F.used, F.desks, F.days, `data-f="${f}"`) + "</tr>";
+  }
+  if (M.floors.length > 1) {
+    h += `<tr class="allrow"><td>All floors <span class="muted" style="font-weight:400">· ${M.capacity}</span></td>`;
+    for (const g of M.byDow) h += cell(g.used, g.desks, g.days, `data-w="${g.key}"`);
+    h += cell(M.used, M.capacity, M.nDays, "") + "</tr>";
+  }
+  $("heat").innerHTML = h + "</tbody>";
+  $("heatNote").textContent = `Averages use ${plural(M.nDays, "reliable check-in day")}${M.untrustedDays.length ? `; the ${plural(M.untrustedDays.length, "day")} without check-in data ${M.untrustedDays.length === 1 ? "is" : "are"} left out, not counted as empty` : ""}.`;
+  $("heat").querySelectorAll("td.cell").forEach(td => bindOpen(td, () => {
+    const f = td.dataset.f ? +td.dataset.f : null, w = td.dataset.w !== undefined ? +td.dataset.w : null;
+    const title = [f ? `Floor ${f}` : "All floors", w !== null ? DOW_LONG[w] + "s" : "All days"].join(" · ");
+    openDrawer({ title, filter: r => (f === null || r.floor === f) && (w === null || r.dow === w) });
+  }));
+}
+
+/* Three-floor capacity: evidence only. Booked counts use every office day (by booking date);
+   arrival counts use reliable check-in days only — an outage day has no arrival figure at all. */
+function capStats() {
+  const C = THREE_FLOOR_DESKS, N = NEAR_DESKS, days = M.days, rel = M.relDays;
+  const maxBy = (arr, k) => arr.reduce((m, d) => (!m || d[k] > m[k] ? d : m), null);
+  const sets = {
+    "b-over": days.filter(d => d.booked > C), "a-over": rel.filter(d => d.used > C),
+    "b-near": days.filter(d => d.booked >= N), "a-near": rel.filter(d => d.used >= N),
+  };
+  return { C, N, sets, peakB: maxBy(days, "booked"), peakA: maxBy(rel, "used"), avgA: M.nDays ? M.used / M.nDays : null };
+}
+
+function renderCapacity() {
+  const el = $("capSection");
+  if (S.floor !== "all" || S.team !== "all") {
+    el.innerHTML = `<div class="card capcard" style="margin-top:14px"><p class="muted">The three-floor comparison is about the whole building, so it always uses all floors and all teams. Set <b>Floor</b> to “All floors” and <b>Team</b> to “All teams” to see it. The date range can stay as it is.</p>
+      <p style="margin-top:10px"><button class="btn" id="leaseReset">Show all floors and teams</button></p></div>`;
+    return;
+  }
+  const { C, N, sets, peakB, peakA, avgA } = capStats();
+  const cap = M.capacity, out = M.untrustedDays.length;
+  const scaleMax = Math.max(cap, peakB ? peakB.booked : 0);
+  const pos = v => (v / scaleMax) * 100;
+  const bar = (lab, sub, v, color, valSub) => `<span class="lab"><i class="sw" style="background:${color}"></i><span>${lab}<small>${sub}</small></span></span>
+    <span class="trk">${v === null ? "" : `<span class="fill" style="width:${pos(v)}%;background:${color}"></span>`}<span class="mark soft" style="left:${pos(N)}%" title="${N} desks (85% of three floors)"></span><span class="mark" style="left:${pos(C)}%" title="${C} desks (three floors)"></span></span>
+    <span class="val">${v === null ? "—" : int(v)}<small>${valSub}</small></span>`;
+  const cnt = (key, of, ofLabel) => {
+    if (!of) return `<td class="num"><span class="n muted">—</span><span class="of">no check-in data</span></td>`;
+    const n = sets[key].length;
+    return `<td class="num${n ? " cnt" : ""}" ${n ? `tabindex="0" data-cap="${key}"` : ""}><span class="n">${n} <small>${n === 1 ? "day" : "days"}</small></span><span class="of">of ${of} ${ofLabel}</span></td>`;
+  };
+  const overB = sets["b-over"], avgOverB = overB.length ? overB.reduce((s, d) => s + d.booked, 0) / overB.length : 0;
+  const relLabel = M.nDays === 1 ? "reliable day" : "reliable days", allLabel = M.nAll === 1 ? "office day" : "office days";
+
+  el.innerHTML = `
+    <div class="grid g-cap">
+      <div class="card capcard">
+        <div class="caphead"><span class="overline">Three-floor capacity</span><span class="big">${C} <small>desks</small></span>
+          <span class="muted" style="font-size:13px">All ${cap} desks minus one ${cap - C}-desk floor</span></div>
+        <div class="gauge">
+          ${bar("Average desks booked", `across ${plural(M.nAll, "office day")}`, M.avgBooked, "var(--s-booked)", `${pct(M.avgBooked / cap)} of ${cap}`)}
+          ${bar("Average recorded arrivals", M.nDays ? `across ${plural(M.nDays, "reliable day")}` : "no check-in data", avgA, "var(--s-used)", avgA === null ? "" : `${pct(avgA / cap)} of ${cap}`)}
+          ${bar("Busiest day, desks booked", peakB ? fmtDate(peakB.date, true) : "", peakB ? peakB.booked : null, "var(--s-booked)", peakB ? `${pct(peakB.booked / C, 0)} of ${C}` : "")}
+          ${bar("Busiest day, recorded arrivals", peakA ? fmtDate(peakA.date, true) : "no check-in data", peakA ? peakA.used : null, "var(--s-used)", peakA ? `${pct(peakA.used / C, 0)} of ${C}` : "")}
+        </div>
+        <div class="gaugekey" aria-hidden="true"><span style="left:0">0</span><span style="left:${pos(N)}%">${N}</span><span style="left:${pos(C)}%">${C}</span><span style="left:${pos(cap)}%">${cap}</span></div>
+        <div class="legend" style="margin-top:8px">
+          <span><i class="sw" style="background:var(--s-booked)"></i>Booked (reservations)</span>
+          <span><i class="sw" style="background:var(--s-used)"></i>Recorded arrivals (people who checked in)</span>
+          <span><i style="display:inline-block;width:2px;height:12px;background:var(--carbon-90)"></i>${C} = three floors</span>
+          <span><i style="display:inline-block;height:12px;border-left:2px dashed var(--carbon-50)"></i>${N} = 85% of three floors</span>
+        </div>
+        <p class="footnote">A booked desk is a reservation, not a person in the building: ${peakB ? `${int(peakB.booked)} desks booked on ${fmtDate(peakB.date)} does not mean ${int(peakB.booked)} people came in` : "bookings and arrivals are counted separately"}.</p>
+      </div>
+
+      <div class="card">
+        <div class="cardhead"><div><h2>Booking demand vs. recorded arrivals</h2><p>How many office days reached each threshold. Click a number for the bookings behind it.</p></div></div>
+        <div class="tablewrap"><table class="thr" id="thrTable">
+          <thead><tr><th>Threshold</th><th class="col-b">Desks booked</th><th class="col-a">Recorded arrivals</th></tr></thead>
+          <tbody>
+            <tr><td><span class="tl">More than ${C} desks<small>${C} desks = assumed capacity of three floors</small></span></td>${cnt("b-over", M.nAll, allLabel)}${cnt("a-over", M.nDays, relLabel)}</tr>
+            <tr><td><span class="tl">At least ${N} desks<small>${N} desks = 85% of three-floor capacity</small></span></td>${cnt("b-near", M.nAll, allLabel)}${cnt("a-near", M.nDays, relLabel)}</tr>
+          </tbody>
+        </table></div>
+        <p class="capsum"><b>${sets["b-over"].length} of ${M.nAll}</b> weekdays had more than ${C} desks booked.
+          ${M.nDays ? `<b>${sets["a-over"].length} of ${M.nDays}</b> weekdays with check-in data had more than ${C} recorded arrivals.` : "Recorded arrivals can't be counted: no day in this range has check-in data."}</p>
+        <p class="footnote">Each day's bookings are counted on the day the desk was booked <em>for</em>.${out ? ` Desks-booked counts include the ${plural(out, "outage day")} (the bookings were real); recorded-arrival counts leave ${out === 1 ? "it" : "them"} out, because arrivals weren't recorded.` : ""}</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="cardhead"><div><h2>Desks booked and recorded arrivals, each office day</h2>
+        <p>Grey bar = desks booked that day. Blue = recorded arrivals within those bookings. Click a day for its bookings.</p></div></div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--s-booked)"></i>Desks booked</span>
+        <span><i class="sw" style="background:var(--s-used)"></i>Recorded arrivals</span>
+        ${out ? `<span><i class="sw" style="background:repeating-linear-gradient(135deg,var(--s-booked) 0 2px,var(--white) 2px 4px);border:1px solid var(--carbon-20)"></i>Booked, arrivals not recorded (outage)</span>` : ""}
+        <span><i style="display:inline-block;width:14px;height:0;border-top:2px solid var(--carbon-90)"></i>${C} desks</span>
+        <span><i style="display:inline-block;width:14px;height:0;border-top:2px dashed var(--carbon-50)"></i>${N} desks</span>
+      </div>
+      <div class="chart daily" id="daily"></div>
+      ${overB.length ? `<p class="capsum">On the <b>${plural(overB.length, "day")}</b> with more than ${C} desks booked, an average of <b>${int(avgOverB)}</b> desks were booked per day, <b>${int(avgOverB - C)}</b> more than ${C}.</p>` : ""}
+    </div>`;
+
+  renderDaily();
+  el.querySelectorAll("td[data-cap]").forEach(td => bindOpen(td, () => {
+    const key = td.dataset.cap, set = new Set(sets[key].map(d => d.date));
+    const label = { "b-over": `Days with more than ${C} desks booked`, "a-over": `Days with more than ${C} recorded arrivals`,
+      "b-near": `Days with at least ${N} desks booked`, "a-near": `Days with at least ${N} recorded arrivals` }[key];
+    openDrawer({ title: `${label} (${set.size})`, scope: "all", filter: r => set.has(r.date) });
+  }));
+}
+
+function renderDaily() {
+  const el = $("daily");
+  if (!el) return;
+  const C = THREE_FLOOR_DESKS, N = NEAR_DESKS, days = M.days;
+  const W = Math.max(420, el.clientWidth || 900), H = 230, padL = 40, padR = 96, padT = 14, padB = 28;
+  const top = Math.ceil(Math.max(M.capacity, ...days.map(d => d.booked)) / 100) * 100;
+  const y = v => padT + (H - padT - padB) * (1 - v / top);
+  const band = (W - padL - padR) / days.length, bw = Math.max(2, Math.min(26, band * 0.72));
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Desks booked and recorded arrivals for each office day, with ${C} and ${N} desk reference lines">
+    <defs><pattern id="outHatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="4" fill="var(--s-booked)"/></pattern></defs>`;
+  for (let v = 0; v <= top; v += 100) s += `<line x1="${padL}" x2="${W - padR}" y1="${y(v)}" y2="${y(v)}" stroke="#ebebf0"/><text x="${padL - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  let lastWeek = null;
+  days.forEach((d, i) => {
+    const cx = padL + band * i + band / 2, x = cx - bw / 2;
+    const yB = y(d.booked), base = y(0);
+    s += `<g class="bar" tabindex="0" role="button" data-i="${i}" aria-label="${fmtDate(d.date, true)}: ${int(d.booked)} desks booked, ${d.reliable ? int(d.used) + " recorded arrivals" : "arrivals not recorded"}">
+      <rect class="hit" x="${padL + band * i}" y="${padT}" width="${band}" height="${H - padT - padB}" fill="transparent"/>
+      <rect x="${x}" y="${yB}" width="${bw}" height="${base - yB}" fill="${d.reliable ? "var(--s-booked)" : "url(#outHatch)"}" ${d.reliable ? "" : `stroke="var(--s-booked)" stroke-width="1"`}/>
+      ${d.reliable ? `<rect x="${x}" y="${y(d.used)}" width="${bw}" height="${base - y(d.used)}" fill="var(--s-used)"/>` : ""}
+    </g>`;
+    // label the first office day of each week (or every day for short ranges)
+    const wk = addDays(d.date, -((dowOf(d.date) + 6) % 7));
+    if (days.length <= 10 || wk !== lastWeek) {
+      const t = utc(d.date);
+      s += `<text class="xl" x="${cx}" y="${H - 9}" text-anchor="middle" font-size="11">${days.length <= 10 ? DOW_SHORT[t.getUTCDay()] + " " : ""}${MONTHS[t.getUTCMonth()]} ${t.getUTCDate()}</text>`;
+    }
+    lastWeek = wk;
+  });
+  s += `<line x1="${padL}" x2="${W - padR}" y1="${y(0)}" y2="${y(0)}" stroke="#a4a9b6"/>
+    <line x1="${padL}" x2="${W - padR}" y1="${y(N)}" y2="${y(N)}" stroke="var(--carbon-50)" stroke-width="1.5" stroke-dasharray="5 4"/>
+    <line x1="${padL}" x2="${W - padR}" y1="${y(C)}" y2="${y(C)}" stroke="var(--carbon-90)" stroke-width="1.5"/>
+    <text x="${W - padR + 6}" y="${y(C) + 4}" style="fill:var(--carbon-90);font-weight:600">${C} · 3 floors</text>
+    <text x="${W - padR + 6}" y="${y(N) + 4}">${N} · 85%</text></svg>`;
+  el.innerHTML = s;
+  el.querySelectorAll(".bar").forEach(b => {
+    const d = days[+b.dataset.i];
+    const r = (k, v) => `<div class="r"><span class="k">${k}</span><b>${v}</b></div>`;
+    const tip = `<b>${fmtDate(d.date, true)}</b>
+      ${r("Desks booked", int(d.booked))}
+      ${r("Recorded arrivals", d.reliable ? int(d.used) : "Not recorded")}
+      ${d.reliable ? "" : `<div class="hint">Check-in system was down; arrivals unknown, not zero</div>`}
+      <div class="hint">Click to see this day's bookings</div>`;
+    b.addEventListener("mousemove", e => showTip(e, tip));
+    b.addEventListener("mouseleave", hideTip);
+    bindOpen(b, () => openDrawer({ title: fmtDate(d.date, true), scope: "all", filter: r => r.date === d.date }));
+  });
+}
+
+/* Light peach → orange → crimson, clamped to [NS_LO, NS_HI]. */
+function nsColor(rate) {
+  const t = Math.max(0, Math.min(1, (rate - NS_LO) / (NS_HI - NS_LO)));
+  const bg = t < 0.5
+    ? `color-mix(in srgb, #f08a4b ${Math.round(t * 200)}%, #fff1e6)`
+    : `color-mix(in srgb, #a3001b ${Math.round((t - 0.5) * 200)}%, #f08a4b)`;
+  return `background:${bg};color:${t > 0.7 ? "#fff" : "var(--carbon-90)"}`;
+}
+const withRate = g => ({ ...g, rate: g.booked ? g.noShow / g.booked : 0 });
+function nsTip(title, g, days) {
+  const r = (k, v) => `<div class="r"><span class="k">${k}</span><b>${v}</b></div>`;
+  return `<b>${esc(title)}</b>
+    ${r("No-show rate", pct(g.rate))}
+    ${r("Booked but unused", int(g.noShow))}
+    ${r("Booked", int(g.booked))}
+    ${r("Actually used", int(g.used))}
+    ${days ? r("Unused per reliable day", (g.noShow / days).toFixed(1)) : ""}
+    ${r("Share of all no-shows", M.noShow ? pct(g.noShow / M.noShow) : "—")}
+    <div class="hint">Click to see these bookings</div>`;
+}
+
+function renderNoShows() {
+  $("q2sub").innerHTML = `<b>${int(M.noShow)}</b> desk-days were booked but unused: <b>${pct(M.nsRate)}</b> of the ${int(M.booked)} bookings on reliable check-in days.
+    <span style="display:block;margin-top:2px"><b style="color:var(--carbon-90)">No-show = a desk was booked for that day, but no check-in was recorded.</b>${M.untrustedDays.length ? " Days when the check-in system was down are not counted as no-shows." : ""}</span>`;
+  renderNsHeat(); renderNsBars();
+}
+
+function renderNsHeat() {
+  const dows = M.byDow, teams = M.byTeam.filter(t => t.booked > 0);
+  const cell = (g, attrs, cls = "") => {
+    if (!g.booked) return `<td class="muted ${cls}">—</td>`;
+    const x = withRate(g);
+    return `<td class="nc ${cls}" tabindex="0" ${attrs} style="${nsColor(x.rate)}" aria-label="${pct(x.rate, 0)} no-show rate, ${int(x.noShow)} unused desk-days">
+      <b>${pct(x.rate, 0)}</b><small>${int(x.noShow)} unused</small></td>`;
+  };
+  const get = (t, w) => { const c = M.tTD.get(t + "|" + w) || { booked: 0, used: 0 }; return { ...c, noShow: c.booked - c.used }; };
+  let h = `<thead><tr><th style="text-align:left">Team</th>${dows.map(d => `<th>${DOW_SHORT[d.key]}</th>`).join("")}<th class="sep">All days</th></tr></thead><tbody>`;
+  teams.forEach((t, ti) => {
+    h += `<tr><td title="${esc(t.label)}">${esc(t.label)}</td>`;
+    dows.forEach((d, di) => { h += cell(get(t.key, d.key), `data-t="${ti}" data-d="${di}"`); });
+    h += cell(t, `data-t="${ti}"`, "sep") + "</tr>";
+  });
+  if (teams.length > 1) {
+    h += `<tr class="allrow"><td>All teams</td>`;
+    dows.forEach((d, di) => { h += cell(d, `data-d="${di}"`); });
+    h += cell({ booked: M.booked, used: M.used, noShow: M.noShow }, "", "sep") + "</tr>";
+  }
+  $("nsHeat").innerHTML = h + "</tbody>";
+  $("nsScaleTxt").textContent = `${pct(NS_LO, 0)} or less → ${pct(NS_HI, 0)} or more`;
+  $("nsHeat").querySelectorAll("td.nc").forEach(td => {
+    const t = td.dataset.t !== undefined ? teams[+td.dataset.t] : null;
+    const d = td.dataset.d !== undefined ? dows[+td.dataset.d] : null;
+    const g = withRate(t && d ? get(t.key, d.key) : t || d || { booked: M.booked, used: M.used, noShow: M.noShow });
+    const title = `${t ? t.label : "All teams"} · ${d ? DOW_LONG[d.key] + "s" : "All days"}`;
+    td.addEventListener("mousemove", e => showTip(e, nsTip(title, g, d ? d.days : M.nDays)));
+    td.addEventListener("mouseleave", hideTip);
+    bindOpen(td, () => openDrawer({ title, status: "noshow",
+      filter: r => (!t || r.team === t.key) && (!d || r.dow === d.key) }));
+  });
+}
+
+function renderNsBars() {
+  const dims = S.nsDim === "dow" ? ["dow"] : ["floor", "team"];
+  const stacked = dims.length > 1;
+  const groups = dims.map(dim => {
+    const src = dim === "team" ? M.byTeam : dim === "dow" ? M.byDow : M.byFloor;
+    const items = src.filter(g => g.booked > 0).map(withRate).sort((a, b) => b.noShow - a.noShow || b.rate - a.rate);
+    return { dim, items, max: Math.max(...items.map(g => g.booked)) };
+  });
+  const name = (dim, g) => (dim === "dow" ? DOW_LONG[g.key] : g.label);
+  const heading = { floor: "By floor", team: "By team", dow: "By day" };
+  $("nsBars").classList.toggle("stacked", stacked);
+  $("nsBars").innerHTML = groups.map(({ dim, items, max }, gi) => `
+    <div class="nsgroup">${stacked ? `<h3>${heading[dim]}</h3>` : ""}${items.map((g, i) => `
+    <div class="nsrow" tabindex="0" role="button" data-g="${gi}" data-i="${i}" aria-label="${esc(name(dim, g))}: ${int(g.noShow)} no-shows of ${int(g.booked)} bookings, ${pct(g.rate)}">
+      <span class="lab" title="${esc(name(dim, g))}">${esc(name(dim, g))}</span>
+      <span class="trk"><span class="u" style="width:${(g.used / max) * 100}%"></span><span class="n" style="width:calc(${(g.noShow / max) * 100}% - 2px)"></span></span>
+      <span class="stat"><span><b>${int(g.noShow)}</b> unused</span><span class="badge" style="${nsColor(g.rate)}">${pct(g.rate)}</span>
+        <small>${int(g.booked)} booked · ${int(g.used)} actually used</small></span>
+    </div>`).join("")}
+    </div>`).join("");
+  $("nsBars").querySelectorAll(".nsrow").forEach(row => {
+    const { dim, items } = groups[+row.dataset.g];
+    const g = items[+row.dataset.i];
+    const filter = dim === "team" ? r => r.team === g.key : dim === "dow" ? r => r.dow === g.key : r => r.floor === g.key;
+    row.addEventListener("mousemove", e => showTip(e, nsTip(name(dim, g), g, dim === "dow" ? g.days : M.nDays)));
+    row.addEventListener("mouseleave", hideTip);
+    bindOpen(row, () => openDrawer({ title: dim === "dow" ? DOW_LONG[g.key] + "s" : g.label, filter, status: "noshow" }));
+  });
+}
+
+/* ───────────────────────── Drill-down drawer ───────────────────────── */
+const PAGE = 200;
+let D = null;
+function bindOpen(el, fn) {
+  el.addEventListener("click", fn);
+  el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } });
+}
+function openGroup(g) {
+  openDrawer(S.dim === "dow"
+    ? { title: DOW_LONG[g.key] + "s", filter: r => r.dow === g.key }
+    : { title: g.label, filter: r => r.floor === g.key });
+}
+/* scope "usage" (default) = reliable check-in days only; "all" = every office day, for booking-demand numbers */
+function openDrawer({ title, filter = () => true, status = "all", outage = false, scope = "usage", lastFocus = document.activeElement }) {
+  const src = outage ? M.excluded : scope === "all" ? M.allRows : M.rows;
+  const rows = src.filter(filter).sort((a, b) => a.date.localeCompare(b.date) || a.floor - b.floor || a.desk.localeCompare(b.desk));
+  D = { title, rows, status, outage, scope, shown: PAGE, lastFocus };
+  hideTip();
+  $("drawer").classList.add("open"); $("scrim").classList.add("open");
+  document.body.style.overflow = "hidden";
+  drawDrawer();
+  $("dClose").focus();
+}
+function closeDrawer() {
+  $("drawer").classList.remove("open"); $("scrim").classList.remove("open");
+  document.body.style.overflow = "";
+  if (D && D.lastFocus && D.lastFocus.focus) D.lastFocus.focus();
+  D = null;
+}
+function statusCell(r) {
+  if (r.untrusted) return `<span class="status unk"><i class="d"></i>Not recorded <small>· check-ins were down</small></span>`;
+  if (r.used) return `<span class="status used"><i class="d"></i>Checked in ${fmtTime(r.checked)}${r.walkin ? ` <small title="The booking was logged after this person had already checked in">· walk-in</small>` : ""}</span>`;
+  return `<span class="status no"><i class="d"></i>Booked but unused</span>`;
+}
+function drawDrawer() {
+  const { rows, outage } = D;
+  const used = rows.filter(r => r.used).length;
+  const unk = rows.filter(r => r.untrusted).length;
+  const ns = rows.length - used - unk;      // no-shows only exist on reliable check-in days
+  const list = D.status === "used" ? rows.filter(r => r.used)
+    : D.status === "noshow" ? rows.filter(r => !r.used && !r.untrusted)
+    : D.status === "unk" ? rows.filter(r => r.untrusted) : rows;
+  $("dTitle").textContent = outage ? "Bookings on days check-in data was unavailable" : D.title;
+  $("dContext").textContent = scopeText() + (outage ? "" : unk ? " · includes days without check-in data" : D.scope === "all" ? "" : " · reliable check-in days only");
+  $("dSummary").innerHTML = outage
+    ? `<span><b>${int(rows.length)}</b> bookings</span><span>These count as booking demand. Arrivals weren't recorded, so they are left out of desk usage and booked-but-unused figures.</span>`
+    : `<span><b>${int(rows.length)}</b> bookings</span><span><b>${int(used)}</b> actually used</span><span><b>${int(ns)}</b> booked but unused</span>
+       ${unk ? `<span><b>${int(unk)}</b> arrival not recorded</span>` : ""}
+       <span>${rows.length - unk ? pct(ns / (rows.length - unk)) + " no-show rate" + (unk ? " (reliable days)" : "") : ""}</span>`;
+  const tabs = [["all", `All (${int(rows.length)})`], ["used", `Used (${int(used)})`], ["noshow", `Booked but unused (${int(ns)})`]];
+  if (unk) tabs.push(["unk", `Not recorded (${int(unk)})`]);
+  $("dTabs").innerHTML = outage ? "" : tabs.map(([k, l]) => `<button class="chip" data-tab="${k}" aria-pressed="${D.status === k}">${l}</button>`).join("");
+  if (!list.length) { $("dBody").innerHTML = `<div class="state" style="margin-top:16px"><h2>No bookings found for selected criteria</h2><p>Nothing matches this view.</p></div>`; return; }
+  const shown = list.slice(0, D.shown);
+  $("dBody").innerHTML = `<table><thead><tr><th>Date</th><th>Floor</th><th>Desk</th><th>Team</th><th>Booked</th><th>Check-in status</th><th>Booking ref</th></tr></thead><tbody>
+    ${shown.map(r => `<tr><td>${fmtDate(r.date, true)}</td><td>Floor ${r.floor}</td><td class="mono">${esc(r.desk)}</td><td>${esc(r.team)}</td>
+      <td>${bookedLabel(r)}</td><td>${statusCell(r)}</td><td class="mono muted">${esc(r.id)}</td></tr>`).join("")}
+    </tbody></table>
+    <div class="more">Showing ${int(shown.length)} of ${int(list.length)}
+      ${list.length > shown.length ? `<button class="btn" id="dMore">Show ${int(Math.min(PAGE * 5, list.length - shown.length))} more</button>` : ""}</div>`;
+}
+
+/* ───────────────────────── Tooltip ───────────────────────── */
+function showTip(e, html) {
+  const t = $("tip"); t.innerHTML = html; t.style.display = "block";
+  const w = t.offsetWidth, h = t.offsetHeight;
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + w > innerWidth - 8) x = e.clientX - w - 14;
+  if (y + h > innerHeight - 8) y = e.clientY - h - 14;
+  t.style.left = x + "px"; t.style.top = y + "px";
+}
+function hideTip() { $("tip").style.display = "none"; }
+
+/* ───────────────────────── Filters ───────────────────────── */
+function readInputs() {
+  S.start = $("fStart").value || DB.min;
+  S.end = $("fEnd").value || DB.max;
+  S.floor = $("fFloor").value;
+  S.team = $("fTeam").value;
+}
+function months() { return [...new Set(DB.dates.map(d => d.slice(0, 7)))]; }
+function monthEnd(m) { const [y, mo] = m.split("-").map(Number); return new Date(Date.UTC(y, mo, 0)).toISOString().slice(0, 10); }
+function syncChips() {
+  $("monthChips").querySelectorAll(".chip").forEach(c => {
+    const on = c.dataset.m === "all" ? S.start === DB.min && S.end === DB.max : S.start === c.dataset.m + "-01" && S.end === monthEnd(c.dataset.m);
+    c.setAttribute("aria-pressed", on);
+  });
+}
+function setupControls() {
+  for (const id of ["fStart", "fEnd"]) { $(id).min = DB.min; $(id).max = DB.max; }
+  $("fStart").value = DB.min; $("fEnd").value = DB.max;
+  $("fFloor").innerHTML = `<option value="all">All floors (${TOTAL_DESKS} desks)</option>` + FLOORS.map(f => `<option value="${f}">Floor ${f} (${CAPACITY[f]} desks)</option>`).join("");
+  $("fTeam").innerHTML = `<option value="all">All teams</option>` + DB.teams.map(t => `<option>${esc(t)}</option>`).join("");
+  $("monthChips").innerHTML = months().map(m => `<button class="chip" data-m="${m}">${MONTHS[+m.slice(5) - 1]}</button>`).join("") + `<button class="chip" data-m="all">All</button>`;
+}
+function resetFilters() {
+  $("fStart").value = DB.min; $("fEnd").value = DB.max; $("fFloor").value = "all"; $("fTeam").value = "all";
+  render();
+}
+
+function wire() {
+  for (const id of ["fStart", "fEnd", "fFloor", "fTeam"]) $(id).addEventListener("change", render);
+  $("monthChips").addEventListener("click", e => {
+    const c = e.target.closest(".chip"); if (!c) return;
+    if (c.dataset.m === "all") { $("fStart").value = DB.min; $("fEnd").value = DB.max; }
+    else { $("fStart").value = c.dataset.m + "-01"; $("fEnd").value = monthEnd(c.dataset.m); }
+    render();
+  });
+  $("resetBtn").addEventListener("click", resetFilters);
+  document.querySelectorAll("#dimSeg button").forEach(b => b.addEventListener("click", () => {
+    S.dim = b.dataset.dim;
+    document.querySelectorAll("#dimSeg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    render();
+  }));
+  document.querySelectorAll("#nsSeg button").forEach(b => b.addEventListener("click", () => {
+    S.nsDim = b.dataset.ns;
+    document.querySelectorAll("#nsSeg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    renderNsBars();
+  }));
+  // Delegated clicks: KPI cards, banner/empty-state buttons, lease reset, drawer controls
+  document.addEventListener("click", e => {
+    const t = e.target.closest("[data-open],#emptyReset,#leaseReset,[data-tab],#dMore");
+    if (!t) return;
+    if (t.id === "emptyReset") return resetFilters();
+    if (t.id === "leaseReset") { $("fFloor").value = "all"; $("fTeam").value = "all"; return render(); }
+    if (t.dataset.tab) { D.status = t.dataset.tab; D.shown = PAGE; return drawDrawer(); }
+    if (t.id === "dMore") { D.shown += PAGE * 5; return drawDrawer(); }
+    const what = t.dataset.open;
+    if (what === "excluded") openDrawer({ title: "", outage: true });
+    else if (what === "demand") openDrawer({ title: "All bookings", scope: "all" });
+    else if (what === "used") openDrawer({ title: "Used desks", status: "used" });
+    else if (what === "noshow") openDrawer({ title: "Booked but unused", status: "noshow" });
+    // Busiest floor / busiest weekday cards are commented out in renderKPIs; their click handlers too:
+    // else if (what === "floor") { const f = +t.dataset.f; openDrawer({ title: `Floor ${f}`, filter: r => r.floor === f }); }
+    // else if (what === "dow") { const w = +t.dataset.w; openDrawer({ title: DOW_LONG[w] + "s", filter: r => r.dow === w }); }
+    else if (what === "peak") {
+      const top = M.peaks.slice(0, 3).map(d => d.date), set = new Set(top);
+      openDrawer({ title: `Peak usage days (${top.map(d => fmtDate(d)).join(", ")})`, filter: r => set.has(r.date) });
+    }
+  });
+  $("dClose").addEventListener("click", closeDrawer);
+  $("scrim").addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && D) closeDrawer(); });
+  let rt; addEventListener("resize", () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
+      if (!M || $("content").hidden) return;
+      if (!$("usageSections").hidden) renderChart();
+      renderDaily();
+    }, 120);
+  });
+}
+
+function showError(title, msg) {
+  $("app").hidden = true; $("loading").hidden = false;
+  $("loading").innerHTML = `<h2>${esc(title)}</h2><p>${esc(msg)}</p>`;
+}
+function start(db) {
+  DB = db;
+  setupControls();
+  $("loading").hidden = true; $("app").hidden = false;
+  render();
+}
+
+wire();
+// Let the loading state paint before the first (synchronous) crunch.
+requestAnimationFrame(() => setTimeout(() => {
+  if (!window.BOOKINGS_DATA) {
+    return showError("No booking data found", "data.js is missing next to index.html. Run `python3 build_data.py` in this folder, then reopen this page.");
+  }
+  start(fromDataJs(window.BOOKINGS_DATA));
+}, 0));
+</script>
+</body>
+</html>

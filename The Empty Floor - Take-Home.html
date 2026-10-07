@@ -1,0 +1,287 @@
+<title>The Empty Floor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&display=swap">
+<style>
+/* ── Envoy Design Tokens ── */
+:root{
+	--white:#ffffff;--carbon-5:#f6f6f9;--carbon-10:#ebebf0;--carbon-20:#c9cbd4;--carbon-30:#a4a9b6;
+	--carbon-40:#8a8f9e;--carbon-50:#717684;--carbon-70:#3f4450;--carbon-80:#303541;--carbon-90:#1f232d;
+	--gem-5:#f0f4ff;--gem-10:#e0e8ff;--gem-60:#4e4eda;--gem-70:#4141a2;
+	--red-10:#ffe0de;--red-50:#e91c1c;--red-60:#c70a14;
+	--cilantro-10:#c7f5d2;--cilantro-40:#21944e;--cilantro-60:#017939;
+	--papaya-10:#ffe7bd;--papaya-60:#a84f00;
+
+	--background:var(--white);--foreground:var(--carbon-70);--card:var(--white);--subtle:var(--carbon-5);
+	--muted-foreground:var(--carbon-50);--primary:var(--gem-60);--primary-foreground:var(--white);
+	--brand:var(--red-50);--link:var(--gem-60);--ring:var(--carbon-40);
+	--success-foreground:var(--cilantro-60);--warning:var(--papaya-10);--warning-foreground:var(--papaya-60);
+	--danger-foreground:var(--red-60);
+
+	--radius-sm:2px;--radius-md:4px;--radius-lg:6px;
+	--shadow-sm:0 1px 2px 0 rgb(0 0 0 / .05);
+	--shadow-md:0 1px 3px 0 rgb(0 0 0 / .1),0 1px 2px -1px rgb(0 0 0 / .1);
+
+	--sans:'Sofia Pro',Arial,sans-serif;
+	--mono:'Geist Mono',ui-monospace,Menlo,monospace;
+	--measure:66ch;--pad:clamp(20px,5vw,56px);
+	color-scheme:light;
+}
+
+*{box-sizing:border-box}
+body{background:var(--background);color:var(--foreground);font-family:var(--sans);font-size:16.5px;line-height:1.62;margin:0;-webkit-font-smoothing:antialiased}
+.wrap{max-width:780px;margin:0 auto;padding:0 var(--pad)}
+
+h1,h2,h3,h4{margin:0;color:var(--carbon-90);letter-spacing:-.01em;font-weight:700;text-wrap:balance}
+h1{font-size:clamp(32px,5.4vw,44px);line-height:1.06;letter-spacing:-.022em}
+h2{font-size:21px;line-height:1.2}
+h3{font-size:16.5px;line-height:1.3}
+p{margin:0;max-width:var(--measure)}
+a{color:var(--link);text-underline-offset:3px}
+a:focus-visible{outline:2px solid var(--ring);outline-offset:3px;border-radius:var(--radius-sm)}
+strong{font-weight:600;color:var(--carbon-80)}
+em{font-style:italic}
+code{font-family:var(--mono);font-size:.85em;letter-spacing:.02em;background:var(--gem-5);color:var(--gem-70);padding:.12em .4em;border-radius:var(--radius-sm)}
+
+.overline{font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--primary)}
+.lede{font-size:18.5px;line-height:1.55;color:var(--muted-foreground);max-width:56ch}
+
+.band{background:var(--subtle);border-bottom:1px solid var(--carbon-10);padding:clamp(40px,7vw,68px) 0 0}
+.band .rule{height:3px;background:var(--brand);width:44px;border-radius:var(--radius-sm);margin-bottom:20px}
+.band .overline{display:block;margin-bottom:12px}
+.band h1{margin-bottom:16px}
+.band .lede{margin-bottom:28px}
+.vitals{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));background:var(--card);border:1px solid var(--carbon-10);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);transform:translateY(22px)}
+.vital{padding:13px 16px;display:flex;flex-direction:column;gap:3px;border-right:1px solid var(--carbon-10)}
+.vital:last-child{border-right:none}
+.vital dt{font-family:var(--mono);font-size:.6875rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted-foreground)}
+.vital dd{margin:0;font-weight:600;font-size:15px;line-height:1.3;color:var(--carbon-90)}
+
+section{padding-top:46px}
+#situation{padding-top:56px}
+.sechead{display:flex;align-items:baseline;gap:13px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--carbon-10)}
+.sechead .n{font-family:var(--mono);font-size:.75rem;font-weight:600;color:var(--primary);letter-spacing:.04em}
+.stack{display:flex;flex-direction:column;gap:15px}
+.note{background:var(--subtle);border-radius:var(--radius-lg);padding:14px 18px;color:var(--muted-foreground);max-width:var(--measure)}
+.note strong{color:var(--carbon-80)}
+
+.quote{background:var(--card);border:1px solid var(--carbon-10);border-left:3px solid var(--primary);border-radius:var(--radius-lg);padding:20px 22px;display:flex;flex-direction:column;gap:11px;box-shadow:var(--shadow-md)}
+.quote .sig{font-family:var(--mono);font-size:.75rem;color:var(--muted-foreground);letter-spacing:.02em}
+
+.ships{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.ship{background:var(--card);border:1px solid var(--carbon-10);border-radius:var(--radius-lg);padding:18px;display:flex;flex-direction:column;gap:7px;box-shadow:var(--shadow-sm)}
+.ship .tag{font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--primary)}
+.ship p{font-size:14.5px;line-height:1.52;color:var(--muted-foreground)}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--carbon-10);border-radius:var(--radius-lg);background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--carbon-10);vertical-align:top}
+thead th{font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted-foreground);background:var(--subtle);white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+td.k{font-family:var(--mono);font-size:12.5px;letter-spacing:.02em;color:var(--carbon-80);white-space:nowrap}
+
+ul.dash{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px;max-width:var(--measure)}
+ul.dash li{padding-left:24px;position:relative;font-size:15.5px}
+ul.dash li::before{content:"";position:absolute;left:2px;top:.62em;width:9px;height:1px;background:var(--carbon-30)}
+ul.dash li.yes::before{content:"\2713";background:none;left:0;top:0;width:auto;height:auto;color:var(--success-foreground);font-size:13px}
+ul.dash li.no::before{content:"\2715";background:none;left:0;top:0;width:auto;height:auto;color:var(--danger-foreground);font-size:12px}
+
+.qline{display:grid;grid-template-columns:24px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--carbon-10);align-items:start}
+.qline:last-child{border-bottom:none}
+.qline .n{font-family:var(--mono);font-size:.75rem;font-weight:600;color:var(--primary-foreground);background:var(--primary);border-radius:var(--radius-sm);width:22px;height:22px;display:grid;place-items:center;margin-top:2px}
+.qline h3{margin-bottom:4px}
+.qline p{font-size:15px;color:var(--muted-foreground)}
+
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.panel{background:var(--card);border:1px solid var(--carbon-10);border-radius:var(--radius-lg);padding:18px;display:flex;flex-direction:column;gap:11px;box-shadow:var(--shadow-sm)}
+.panel h4{margin:0;font-family:var(--mono);font-size:.6875rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted-foreground);font-weight:600}
+.panel.ok{border-top:3px solid var(--cilantro-40)}
+.panel.nope{border-top:3px solid var(--brand)}
+
+footer{margin-top:50px;background:var(--subtle);border-top:1px solid var(--carbon-10)}
+footer .inner{max-width:780px;margin:0 auto;padding:18px var(--pad) 26px;display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:space-between;font-family:var(--mono);font-size:.6875rem;letter-spacing:.04em;color:var(--muted-foreground)}
+
+@media (max-width:560px){.vital{border-right:none;border-bottom:1px solid var(--carbon-10)}.vital:last-child{border-bottom:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="band">
+	<div class="wrap">
+		<div class="rule"></div>
+		<span class="overline">Solutions Engineering Intern · Take-home</span>
+		<h1>The Empty Floor</h1>
+		<p class="lede">A customer pays for desks nobody sits at and can't prove it. Here's their data. Build her a small app that answers it.</p>
+		<dl class="vitals">
+			<div class="vital"><dt>Time</dt><dd>3 hours, max</dd></div>
+			<div class="vital"><dt>Due</dt><dd>Within 3 days</dd></div>
+			<div class="vital"><dt>You build</dt><dd>One screen</dd></div>
+			<div class="vital"><dt>AI tools</dt><dd>Yes, please</dd></div>
+		</dl>
+	</div>
+</div>
+
+<div class="wrap">
+
+<section id="situation">
+	<div class="sechead"><span class="n">01</span><h2>The situation</h2></div>
+	<div class="stack">
+		<p>Brightline is a customer of ours. One office, four floors, 400 desks, about 600 people. Everyone books a desk in the app before they come in, and when they arrive they check in on their phone. Plenty of them don't come in at all.</p>
+		<div class="quote">
+			<p>I get asked whether we can give back a floor when the lease renews, and I genuinely don't know. The app tells me three hundred desks were booked last Tuesday. It doesn't tell me three hundred people turned up, because they didn't.</p>
+			<p>I export this file every Monday and stare at it. I'd rather have something I can just open and click around in — I get asked about different floors and different months every time.</p>
+			<p class="sig">Dana · Workplace Manager, Brightline</p>
+		</div>
+		<p>Dana is your user. She isn't technical, she'll open this on a laptop, and whatever she sees has to survive being repeated in a meeting with her finance director.</p>
+	</div>
+</section>
+
+<section id="data">
+	<div class="sechead"><span class="n">02</span><h2>The file</h2></div>
+	<div class="stack">
+		<p><strong><code>bookings.csv</code> is attached to your email thread.</strong> Three months, 17,929 rows, one row per desk booking. Nothing to install, nothing to generate.</p>
+		<div class="tablewrap">
+			<table>
+				<thead><tr><th>Column</th><th>What it is</th></tr></thead>
+				<tbody>
+					<tr><td class="k">booking_id</td><td>Unique per booking.</td></tr>
+					<tr><td class="k">booking_date</td><td>The day the desk was booked <em>for</em>.</td></tr>
+					<tr><td class="k">desk_id, floor</td><td>Which desk, on which of the four floors.</td></tr>
+					<tr><td class="k">employee_id, team</td><td>Who booked it and which team they're on.</td></tr>
+					<tr><td class="k">booked_at</td><td>When they made the booking.</td></tr>
+					<tr><td class="k">checked_in_at</td><td>When they actually turned up — <strong>blank if they never checked in.</strong></td></tr>
+				</tbody>
+			</table>
+		</div>
+		<p class="note"><strong>Look at the file before you trust it.</strong> Real customer exports always have something in them that makes a naive answer wrong, and this one is no exception. <mark>Twenty minutes poking at the data before you write any UI is the right call.</mark></p>
+	</div>
+</section>
+
+<section id="questions">
+	<div class="sechead"><span class="n">03</span><h2>Two questions it has to answer</h2></div>
+	<div class="stack">
+		<p>Dana should be able to get both of these out of your screen without asking you anything.</p>
+		<div>
+			<div class="qline"><span class="n">1</span><div>
+				<h3>How full is each floor, really?</h3>
+				<p>By floor and by day of the week. The screen has to make clear what you counted — Dana repeats that to a finance director and it has to hold up.</p>
+			</div></div>
+			<div class="qline"><span class="n">2</span><div>
+				<h3>How much space is booked and never used?</h3>
+				<p> <mark>How many desk-days go to no-shows, and whether it's concentrated anywhere — a floor, a day, a few teams. Teams, not named people.</mark></p>
+			</div></div>
+		</div>
+	</div>
+</section>
+
+<section id="ui">
+	<div class="sechead"><span class="n">04</span><h2>Build it as an app</h2></div>
+	<div class="stack">
+		<p>Not a notebook, not a static export — a screen Dana opens and clicks around in. We're not prescribing a layout and we don't care what it looks like, but these seven things have to be true of it.</p>
+		<div class="tablewrap">
+			<table style="min-width:540px">
+				<thead><tr><th>#</th><th>Requirement</th></tr></thead>
+				<tbody>
+					<tr><td class="k">1</td><td><strong>One screen.</strong> Everything on a single page. No navigation maze, no wizard, no tabs you have to hunt through.</td></tr>
+					<tr><td class="k">2</td><td><strong>Controls that actually filter.</strong> At minimum a date range and a filter by floor. Every number and chart on the page updates when they change.</td></tr>
+					<tr><td class="k">3</td><td><strong>A summary strip.</strong> The three or four headline numbers, visible without scrolling, reflecting the current filters.</td></tr>
+					<tr><td class="k">4</td><td><strong>At least one chart and one table</strong> — and they have to agree with each other. A chart whose total doesn't match the table beneath it is the fastest way to lose a customer's trust.</td></tr>
+					<tr><td class="k">5</td><td><strong>A way down to the rows.</strong> Click a floor, a day or a team and see the bookings behind that number.</td></tr>
+					<tr><td class="k">6</td><td> <mark><strong> Honest states.</strong> Something sensible while it loads, something clear when a filter matches nothing, and a visible flag when the data for the selected period can't be trusted. </mark></td></tr> 
+					<tr><td class="k">7</td><td><strong>Words Dana understands.</strong> No column names as labels, no <code>checked_in_at</code> on screen.  <mark>Your definition of a used desk appears <em>in the interface</em></mark>, not only in your README.</td></tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="split">
+			<div class="panel ok">
+				<h4>Fine, and encouraged</h4>
+				<ul class="dash">
+					<li class="yes">Any framework, or none. Plain HTML and JavaScript is a perfectly good answer.</li>
+					<li class="yes">A component or chart library. Generating the whole UI with an AI tool.</li>
+					<li class="yes">Pre-computing the numbers into a JSON file instead of parsing the CSV in the browser.</li>
+					<li class="yes">Running locally from your README. No deployment needed.</li>
+				</ul>
+			</div>
+			<div class="panel nope">
+				<h4>Not needed — skip it</h4>
+				<ul class="dash">
+					<li class="no">Login, accounts, permissions, or a settings page.</li>
+					<li class="no">A backend, a database, or an API. A single file that opens in a browser is fine.</li>
+					<li class="no">A mobile layout. She's on a laptop.</li>
+					<li class="no">Saving state, exporting, dark mode, animation, or visual polish.</li>
+				</ul>
+			</div>
+		</div>
+		<p class="note">Requirement 6 is the one people skip, and it's the one we look at first. An interface that shows a confident number for a period where the underlying data is broken is worse than one that says it doesn't know.</p>
+	</div>
+</section>
+
+<section id="send">
+	<div class="sechead"><span class="n">05</span><h2>What to send us</h2></div>
+	<div class="stack">
+		<div class="ships">
+			<div class="ship"><span class="tag">One</span><h3>The app</h3><p>A repo we can run from your README — one command, or just opening a file. Deploy it if that's easy for you; it isn't required.</p></div>
+			<div class="ship"><span class="tag">Two</span><h3>A few sentences to Dana</h3><p>What you found, what you assumed, what you'd add next. Written to her, not to us. A paragraph or two is plenty.</p></div>
+		</div>
+		<div class="tablewrap" style="margin-top:2px">
+			<table style="min-width:420px">
+				<thead><tr><th>Roughly</th><th>Spend it on</th></tr></thead>
+				<tbody>
+					<tr><td class="k">0:00 – 0:20</td><td>Open the file. Poke at it. <mark>Decide what "the desk was used" means and write that sentence down.</mark></td></tr>
+					<tr><td class="k">0:20 – 2:10</td><td>Build the screen: filters, summary, chart, table, drill-down.</td></tr>
+					<tr><td class="k">2:10 – 2:40</td><td>The states. Empty filter, loading, and the period where the data is wrong. Then click around trying to break it.</td></tr>
+					<tr><td class="k">2:40 – 3:00</td><td>Write the note to Dana.</td></tr>
+				</tbody>
+			</table>
+		</div>
+		<p class="note">Three hours is a ceiling, not a target. Requirements 1–5 working cleanly beats all seven half-wired — if you run out of time, say which ones you didn't get to and what you'd do. That's a good answer, not a bad one.</p>
+	</div>
+</section>
+
+<section id="done">
+	<div class="sechead"><span class="n">06</span><h2>You're done when</h2></div>
+	<div class="stack">
+		<ul class="dash">
+			<li class="yes">Someone opens it, changes a filter, and both questions get answered without you in the room.</li>
+			<li class="yes">The chart and the table agree.</li>
+			<li class="yes">Clicking a number gets you to the bookings behind it.</li>
+			<li class="yes">An empty filter says so instead of showing zero as if it were a fact.</li>
+			<li class="yes"> <mark>Your definition of a used desk is visible on screen.</mark></li>
+			<li class="yes">Your note says what you assumed and where you might be wrong.</li>
+		</ul>
+	</div>
+</section>
+
+<section id="rules">
+	<div class="sechead"><span class="n">07</span><h2>Rules and scoring</h2></div>
+	<div class="stack">
+		<div class="tablewrap">
+			<table style="min-width:440px">
+				<thead><tr><th>We're looking at</th><th>Which means</th></tr></thead>
+				<tbody>
+					<tr><td class="k">The interface</td><td>Dana can answer both questions by clicking, without a tour. The important thing is the obvious thing on the page.</td></tr>
+					<tr><td class="k">Reading the data</td><td>You noticed what's odd in the file before it silently broke one of your numbers — and the screen says so.</td></tr>
+					<tr><td class="k">Judgment</td><td>You showed what answers her question and left out what doesn't.</td></tr>
+					<tr><td class="k">Explaining it</td><td>Your note is in Dana's language, and you can talk us through your own code.</td></tr>
+				</tbody>
+			</table>
+		</div>
+		<p class="note">We don't score test coverage, architecture, framework choice, or how pretty it is. We do read your code — together, on the call — and if an AI wrote a file, that's expected. Being unable to explain it isn't.</p>
+		<ul class="dash">
+			<li class="no">Don't name individual employees as the problem. Teams, not a wall of shame.</li>
+			<li class="no">Don't hand in something you can't explain.</li>
+			<li class="no">Don't spend eight hours on a three-hour exercise. We can tell, and it doesn't help you.</li>
+			<li class="yes">Do email us questions. We reply as Dana, and asking counts in your favour — especially on day one.</li>
+		</ul>
+		<p><strong>Sending it.</strong> Reply to this thread with a repo link, or a zip if that's easier.</p>
+		<p><strong>Then a 30-minute call.</strong> Ten minutes of you driving the app while we click, ten of us reading a bit of the code with you, ten for your questions about the job.</p>
+	</div>
+</section>
+
+</div>
+
+<footer>
+	<div class="inner">
+		<span>Brightline is fictional. The data is synthetic.</span>
+		<span>Solutions Engineering intern take-home</span>
+	</div>
+</footer>
