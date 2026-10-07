@@ -5,6 +5,11 @@
 **Double-click `index.html`.** It opens in any modern browser (Chrome, Edge, Safari, Firefox). You don't need a server, an install or an internet connection. The charts are plain SVG; only the monospace font comes from Google Fonts, and the page falls back to a system font when offline.
 
 `index.html` reads its data from `data.js` in the same folder.
+`data.js` (already built) holds the bookings. To refresh it from a new export:
+
+```
+python3 build_data.py path/to/bookings.csv
+```
 
 ## explore_bookings.ipynb - Data Exploration
 
